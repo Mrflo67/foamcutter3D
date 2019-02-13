@@ -1,4 +1,5 @@
 #include "Header/SelecteurFichier.h"
+#include "Header/Gcode.h"
 
 #include "tfd\tinyfiledialogs.h"
 #include <iostream>
@@ -19,15 +20,10 @@ SelecteurFichier::~SelecteurFichier()
 
 bool SelecteurFichier::verifierExtension(char const* nom)
 {
-	//todo
-	
-	int longueur = strlen(nom);
-	
-	if (longueur > 4)
+	if (strlen(nom) > 4)
 	{
 		std::string sNom = nom;
-		if(sNom.rfind(EXTENSION)==std::string::npos) //recherche si l'extension voulue est dans le nom du fichier
-													//dernière occurrence, donc .txt.gco valide
+		if(sNom.rfind(EXTENSION)==std::string::npos) //recherche la dernière occurence de l'extension dans le nom
 		{ 
 			return false;
 		}
@@ -43,20 +39,20 @@ bool SelecteurFichier::afficher()
 {
 	char const* filtre[1] = { EXTENSIONS };
 	char const* fichierAOuvrir;
+
 	fichierAOuvrir = tinyfd_openFileDialog(
 		"Choix du gcode", // NULL or ""
 		"", // NULL or ""
 		1, // 0
 		filtre, // NULL {"*.jpg","*.png"}
-		"fichiers gcode", // NULL | "image files"
+		"Fichiers gcode", // NULL | "image files"
 		0); // 0
 										  // in case of multiple files, the separator is |
 										  // returns NULL on cancel
-	std::cout << fichierAOuvrir << std::endl;
 
 	if (fichierAOuvrir != NULL) //si l'utilisateur a selectionné un fichier
 	{
-		std::cout << fichierAOuvrir << std::endl;
+		std::cout << fichierAOuvrir << std::endl; //debug
 		if (!selectionner(fichierAOuvrir)) //si le fichier est valide
 		{
 			return false;
@@ -79,10 +75,8 @@ bool SelecteurFichier::selectionner(const char* nom)
 		return false;
 	}
 
-
-
 	std::ifstream gcodeFile(nom);
-	std::cout << "ouverture de " << nom <<" en cours..."<< std::endl;
+	std::cout << "ouverture de " << nom <<" en cours..."<< std::endl; //debug
 
 	if (gcodeFile.is_open())
 	{
@@ -90,7 +84,7 @@ bool SelecteurFichier::selectionner(const char* nom)
 		
 		if (gcodeFile.tellg() <= TAILLELIMITE) //verifie si le fichier a une taille inferieure à 100Mo
 		{
-			std::cout << "ouverture reussie ! chargement en cours !" << std::endl;
+			std::cout << "ouverture reussie ! chargement en cours !" << std::endl; //debug
 			
 			gcodeFile.seekg(0, std::ios::beg); //remet le curseur au début
 			char c;
@@ -101,8 +95,8 @@ bool SelecteurFichier::selectionner(const char* nom)
 				s += c; //recupere chaque caractère et l'ajoute à s
 			}
 
-			std::cout <<s << std::endl;
-			/*Gcode.setCommandes(s);*/   //affecte s à Gcode
+			std::cout <<s << std::endl; //debug
+			Gcode gcode(s);  //affecte s à Gcode
 
 			msgSucces();
 			tinyfd_notifyPopup(
@@ -110,10 +104,8 @@ bool SelecteurFichier::selectionner(const char* nom)
 				"Initialisation en cours", // NULL or "" may contain \n \t
 				"info"); // "info" "warning" "error"
 		}
-	
 		else
 		{
-			//std::cout << "le fichier est trop grand, veuillez reessayer !" << std::endl;
 			msgErreur("le fichier est trop grand!\n Veuillez reessayer !");
 		}
 		
@@ -122,13 +114,9 @@ bool SelecteurFichier::selectionner(const char* nom)
 	}
 	else
 	{
-		//impossible d'ouvrir xxx
-		//std::cout << "impossible d'ouvrir " << nom << " !" << std::endl;
 		msgErreur("Ouverture impossible!\nVeuillez reessayer");
 	}
 	
-
-
 	return true;
 }
 
@@ -158,8 +146,8 @@ bool SelecteurFichier::msgErreur(char const* const message)
 	return true;
 }
 
-bool SelecteurFichier::fermer()
+/*bool SelecteurFichier::fermer()
 {
 	return true;
-}
+}*/
 

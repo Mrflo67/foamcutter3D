@@ -16,6 +16,9 @@
 
 
 
+/*C Libraries*/
+#include <stdio.h>
+#include <stdlib.h>
 
 /* C++ Libraries */
 #include <iostream>
@@ -57,114 +60,72 @@ void MenuFile();
 
 //#define chemin "C:\\Users\\Florian\\Desktop\\FoamCutter\\FoamCutter\\src\\GCODES\\DemoRapideV2.gco"
 
-int main()
+int main(void)
 {
 	SelecteurFichier selec;
-	if(selec.afficher())
-	{ 
-		
-		/* DO NOT CHANGE THIS PART */
-		GLFWwindow* window;
-
-		/* Initialize the library */
+	
+	if (selec.afficher())
+	{
+		// Initialise GLFW
 		if (!glfwInit())
+		{
+			fprintf(stderr, "Failed to initialize GLFW\n");
+			getchar();
 			return -1;
+		}
 
+		glfwWindowHint(GLFW_SAMPLES, 4);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#if __APPLE__
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-		/* Create a windowed mode window and its OpenGL context */
+		// Open a window and create its OpenGL context
+		GLFWwindow* window; // (In the accompanying source code, this variable is global for simplicity)
 		window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGTH, "Foam Cutter", NULL, NULL);
-		if (!window)
-		{
+		if (window == NULL) {
+			fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
+			getchar();
+			glfwTerminate();
+			return -1;
+		}
+		glfwMakeContextCurrent(window);
+
+		// Initialize GLEW
+		if (glewInit() != GLEW_OK) {
+			fprintf(stderr, "Failed to initialize GLEW\n");
+			getchar();
 			glfwTerminate();
 			return -1;
 		}
 
-		/* Make the window's context current */
-		glfwMakeContextCurrent(window);
-		glfwSwapInterval(1); // Enable vsync
+		// Ensure we can capture the escape key being pressed below
+		glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-							 // Setup ImGui binding
-		ImGui::CreateContext();
-		ImGui_ImplGlfwGL3_Init(window, true);
-		ImGui::StyleColorsDark();
-		bool displayGcode = false;
-		bool show_demo_window = true;
+		// Dark blue background
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-		/* Thread */
-		//std::thread t_selectPath(waitSelectPath);
-		//std::thread t_readGcode(openGCode);
+		do {
+			// Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
+			glClear(GL_COLOR_BUFFER_BIT);
 
-		/* Verify if glewInit is valid and initilize it */
-		if (glewInit() != GLEW_OK)
-			std::cout << "Error" << std::endl;
-		/**************************/
+			// Draw nothing, see you in tutorial 2 !
 
-		std::cout << glGetString(GL_VERSION) << std::endl;
-		{
-			Renderer renderer;
 
-			/* Loop until the user closes the window */
-			while (!glfwWindowShouldClose(window))
-			{
-				/* Render here */
-				renderer.Clear();
-				ImGui_ImplGlfwGL3_NewFrame();
+			// Swap buffers
+			glfwSwapBuffers(window);
+			glfwPollEvents();
 
-				ImGui::Begin("Informations");
-				{
-					// Menu
-					if (ImGui::BeginMenu("File"))
-					{
-						MenuFile();
-						ImGui::EndMenu();
-					}
-					ImGui::Checkbox("Display GCode", &displayGcode);
-					ImGui::Checkbox("Demo Window", &show_demo_window);
-					ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-				}
-				ImGui::End(); // END Test
+		} // Check if the ESC key was pressed or the window was closed
+		while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
+			glfwWindowShouldClose(window) == 0);
 
-				if (displayGcode)
-				{
-					ImGui::Begin("GCode File", &displayGcode);
-					openGCode();
-					displayGcode = false;
-					ImGui::End();
-				}
-
-				if (show_demo_window)
-				{
-					ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-					ImGui::ShowDemoWindow(&show_demo_window);
-				}
-
-				ImGui::Render();
-				ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-				/* Swap front and back buffers */
-				glfwSwapBuffers(window);
-
-				/* Poll for and process events */
-				glfwPollEvents();
-			}
-		}
-		// Cleanup
-		ImGui_ImplGlfwGL3_Shutdown();
-		ImGui::DestroyContext();
+		// Close OpenGL window and terminate GLFW
 		glfwTerminate();
-
-
-
-
 	}
 
 
+	
 
 	return 0;
 }
