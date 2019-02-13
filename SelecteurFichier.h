@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <Header\Gcode.h>
 
 class SelecteurFichier
 {
@@ -16,12 +17,10 @@ public:
 	SelecteurFichier();
 	~SelecteurFichier();
 
-	bool afficher();
-
 	//verifier puis charger le gcode contenu dans le fichier designé
-	bool selectionner(const char* nom);
+	bool selectionner(Gcode &gcodeCopy);
 
-	bool fermer();
+	/*bool fermer(); inutile car tfd ferme automatiquement*/
 	
 };
 

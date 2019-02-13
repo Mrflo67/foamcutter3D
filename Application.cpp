@@ -39,6 +39,7 @@
 #include "Header/Thread.h"
 #include "Header/ImGui_Menu.h"
 #include "Header/SelecteurFichier.h"
+#include "Header/Gcode.h"
 
 
 /* DEFINE */
@@ -63,9 +64,12 @@ void MenuFile();
 int main(void)
 {
 	SelecteurFichier selec;
-	
-	if (selec.afficher())
+	Gcode gcode;
+
+	if (selec.selectionner(gcode))
 	{
+		
+
 		// Initialise GLFW
 		if (!glfwInit())
 		{
@@ -122,6 +126,10 @@ int main(void)
 
 		// Close OpenGL window and terminate GLFW
 		glfwTerminate();
+	}
+	else
+	{
+		//
 	}
 
 

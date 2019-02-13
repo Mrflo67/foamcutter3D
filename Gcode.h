@@ -8,9 +8,11 @@ private:
 	size_t taille;
 
 public:
-	Gcode(std::string cmd);
+	Gcode();
 	~Gcode();
 	std::string getCommandes();
 	size_t getTaille();
+
+	void setCommandes(std::string s);
 };
 
