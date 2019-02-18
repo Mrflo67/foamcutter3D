@@ -135,6 +135,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Include\Cpp\GcodeLoader.cpp" />
+    <ClCompile Include="src\Include\Cpp\Gcode.cpp" />
     <ClCompile Include="Include\IMGUI\imgui.cpp" />
     <ClCompile Include="Include\IMGUI\imgui_demo.cpp" />
     <ClCompile Include="Include\IMGUI\imgui_draw.cpp" />
@@ -150,6 +152,8 @@
     <None Include="src\Shader\Shader.shader" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Include\Header\GcodeLoader.h" />
+    <ClInclude Include="src\Include\Header\Gcode.h" />
     <ClInclude Include="Include\IMGUI\imconfig.h" />
     <ClInclude Include="Include\IMGUI\imgui.h" />
     <ClInclude Include="Include\IMGUI\imgui_impl_glfw_gl3.h" />
