@@ -37,84 +37,78 @@ bool SelecteurFichier::verifierExtension(char const* nom)
 
 
 
-bool SelecteurFichier::selectionner(Gcode &gcodeCopy)
+std::string SelecteurFichier::select()
 {
 	char const* filtre[1] = { EXTENSIONS };
-	char const* fichierAOuvrir;
+	std::string nomFichierGcode = "";
 
-	fichierAOuvrir = tinyfd_openFileDialog(
-		"Choix du gcode", // NULL or ""
-		"", // NULL or ""
-		1, // 0
-		filtre, // NULL {"*.jpg","*.png"}
-		"Fichiers gcode", // NULL | "image files"
-		0); // 0
-			// in case of multiple files, the separator is |
-			// returns NULL on cancel
-
-	if (fichierAOuvrir != NULL) //si l'utilisateur a selectionné un fichier
+	while (nomFichierGcode == "")
 	{
+		char const* fichierChoisi=NULL;
 
-		if (!verifierExtension(fichierAOuvrir))
+		fichierChoisi = tinyfd_openFileDialog(
+			"Choix du gcode", // NULL or ""
+			"", // NULL or ""
+			1, // 0
+			filtre, // NULL {"*.jpg","*.png"}
+			"Fichiers gcode", // NULL | "image files"
+			0); // 0
+				// in case of multiple files, the separator is |
+				// returns NULL on cancel
+
+		if (fichierChoisi == NULL)
+		{
+			msgErreur("Choix du gcode annulé, fermeture du programme...");
+			break;
+		}
+			
+
+		if (!verifierExtension(fichierChoisi))
 		{
 			msgErreur("Mauvaise extension !");
-			return false;
-		}
-
-		std::ifstream gcodeFile(fichierAOuvrir);
-		std::cout << "ouverture de " << fichierAOuvrir << " en cours..." << std::endl; //debug
-
-		if (gcodeFile.is_open())
-		{
-			gcodeFile.seekg(0, std::ios::end); //place le curseur virtuel à la fin du fichier
-
-			if (gcodeFile.tellg() <= TAILLELIMITE) //verifie si le fichier a une taille inferieure à 100Mo
-			{
-				std::cout << "ouverture reussie ! chargement en cours !" << std::endl; //debug
-
-				gcodeFile.seekg(0, std::ios::beg); //remet le curseur au début
-				char c;
-				std::string s;
-
-				while (gcodeFile.get(c))
-				{
-					s += c; //recupere chaque caractère et l'ajoute à s
-				}
-
-				std::cout << s << std::endl; //debug
-				gcodeCopy.setCommandes(s);//affecte s à Gcode
-
-				msgSucces();
-				tinyfd_notifyPopup(
-					"Simulation", // NULL or ""
-					"Initialisation en cours", // NULL or "" may contain \n \t
-					"info"); // "info" "warning" "error"
-			}
-			else
-			{
-				msgErreur("le fichier est trop grand!\n Veuillez reessayer !");
-			}
-
-
-			gcodeFile.close();
 		}
 		else
 		{
-			msgErreur("Ouverture impossible!\nVeuillez reessayer");
+			std::ifstream gcodeFile(fichierChoisi);
+			std::cout << "ouverture de " << fichierChoisi << " en cours..." << std::endl; //debug
+
+			if (gcodeFile.is_open())
+			{
+				gcodeFile.seekg(0, std::ios::end); //place le curseur virtuel à la fin du fichier
+
+				size_t longueur = gcodeFile.tellg(); //recupère la longueur du fichier
+				gcodeFile.seekg(0, std::ios::beg); //remet le curseur au début
+
+				if (longueur > 0 && longueur <= TAILLELIMITE)
+				{
+					char c;
+					while (gcodeFile.get(c))
+					{
+						nomFichierGcode += c;
+					}
+				}
+				else
+				{
+					msgErreur("le fichier est trop grand!\n Veuillez reessayer !");
+				}
+			gcodeFile.close();
+			}
+			else
+			{
+				msgErreur("Ouverture impossible!\nVeuillez reessayer");
+			}
 		}
 	}
-	else
-	{
-		return false; //si l'utilisateur a annulé ou fermé la fenetre
-	}
-	return true;
+	
+	msgSucces("Fichier selectionné ! Chargement en cours...");
+	return nomFichierGcode;
 }
 
-bool SelecteurFichier::msgSucces()
+bool SelecteurFichier::msgSucces(char const* const message)
 {
 	tinyfd_messageBox(
-		"Gcode", // NULL or ""
-		"Chargement réussi", // NULL or "" may contain \n \t
+		"Succès", // NULL or ""
+		message, // NULL or "" may contain \n \t
 		"ok", // "ok" "okcancel" "yesno" "yesnocancel"
 		"info", // "info" "warning" "error" "question"
 		1);
@@ -138,6 +132,6 @@ bool SelecteurFichier::msgErreur(char const* const message)
 
 /*bool SelecteurFichier::fermer()
 {
-	return true;
+	return true; //peut être utile selon la bibliothèque graphique utilisée
 }*/
 

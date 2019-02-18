@@ -1,8 +1,9 @@
 #include "Header/Gcode.h"
 
 
-Gcode::Gcode()
+Gcode::Gcode(std::string n)
 {
+	this->name = n;
 	this->commandes = "";
 	this->taille = 0;
 }
@@ -20,11 +21,14 @@ unsigned int Gcode::getTaille()
 	return this->taille;
 }
 
-void Gcode::setCommandes(std::string s)
+
+
+int Gcode::isLoaded()
 {
-	if (this->taille == 0)
-	{
-		this->commandes = s;
-		this->taille = strlen(s.c_str());
-	}
+	int loadState = 0;
+
+	if (this->taille > 0)
+		loadState = 1;
+
+	return loadState;
 }
