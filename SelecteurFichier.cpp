@@ -36,6 +36,35 @@ bool SelecteurFichier::verifierExtension(char const* nom)
 }
 
 
+bool SelecteurFichier::verifierLongueur(char const* nom)
+{
+	std::ifstream gcodeFile(nom);
+	std::cout << "ouverture de " << nom << " en cours..." << std::endl; //debug
+
+	if (gcodeFile.is_open())
+	{
+		gcodeFile.seekg(0, std::ios::end); //place le curseur virtuel à la fin du fichier
+
+		size_t longueur = gcodeFile.tellg(); //recupère la longueur du fichier
+		gcodeFile.seekg(0, std::ios::beg); //remet le curseur au début
+
+		if (longueur == 0 || longueur > TAILLELIMITE)
+		{
+			gcodeFile.close();
+			return false;
+		}
+		gcodeFile.close();
+	}
+	else
+	{
+		msgErreur("Ouverture impossible!\nVeuillez reessayer");
+		return false;
+	}
+	return true;
+}
+
+
+
 
 std::string SelecteurFichier::select()
 {
@@ -63,44 +92,25 @@ std::string SelecteurFichier::select()
 		}
 			
 
-		if (!verifierExtension(fichierChoisi))
+		if(!verifierExtension(fichierChoisi))
 		{
 			msgErreur("Mauvaise extension !");
 		}
 		else
 		{
-			std::ifstream gcodeFile(fichierChoisi);
-			std::cout << "ouverture de " << fichierChoisi << " en cours..." << std::endl; //debug
-
-			if (gcodeFile.is_open())
+			if (!verifierLongueur(fichierChoisi))
 			{
-				gcodeFile.seekg(0, std::ios::end); //place le curseur virtuel à la fin du fichier
-
-				size_t longueur = gcodeFile.tellg(); //recupère la longueur du fichier
-				gcodeFile.seekg(0, std::ios::beg); //remet le curseur au début
-
-				if (longueur > 0 && longueur <= TAILLELIMITE)
-				{
-					char c;
-					while (gcodeFile.get(c))
-					{
-						nomFichierGcode += c;
-					}
-				}
-				else
-				{
-					msgErreur("le fichier est trop grand!\n Veuillez reessayer !");
-				}
-			gcodeFile.close();
+				msgErreur("le fichier est trop grand!\n Veuillez reessayer !");
 			}
 			else
 			{
-				msgErreur("Ouverture impossible!\nVeuillez reessayer");
+				nomFichierGcode = fichierChoisi;
+				msgSucces("Fichier selectionné ! Chargement en cours...");
 			}
-		}
+		}	
 	}
 	
-	msgSucces("Fichier selectionné ! Chargement en cours...");
+	
 	return nomFichierGcode;
 }
 

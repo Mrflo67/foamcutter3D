@@ -11,6 +11,12 @@ Gcode::Gcode(std::string n)
 Gcode::~Gcode()
 {}
 
+
+std::string Gcode::getName()
+{
+	return this->name;
+}
+
 std::string Gcode::getCommandes()
 {
 	return this->commandes;
@@ -31,4 +37,14 @@ int Gcode::isLoaded()
 		loadState = 1;
 
 	return loadState;
+}
+
+void Gcode::setCommandes(std::string cmd)
+{
+	if (this->taille == 0)
+	{
+		this->commandes = cmd;
+		taille = cmd.size();
+	}
+
 }

@@ -11,7 +11,10 @@ private:
 public:
 	Gcode(std::string n);
 	~Gcode();
+
+	std::string getName();
 	std::string getCommandes();
+	void setCommandes(std::string);
 	size_t getTaille();
 	int isLoaded();
 };
