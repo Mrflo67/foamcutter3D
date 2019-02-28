@@ -4,87 +4,40 @@
 *	PROJECT BTS SN 2019 - FOAM CUTTER
 */
 
-/*C Libraries*/
-#include <stdio.h>
-#include <stdlib.h>
+/* Personal Libraries */
+#include "pch.h"
+#include "Header/Headers.h"
+#include "Header/Struct.h"
 
-/* C++ Libraries */
-#include <iostream>
+#ifndef _WIN32 /* Set the parameter for windows 32 bit */
+#define APIENTRY __stdcall
+#endif // !__WIN32
 
-#ifndef __win32__
-#include <windows.h>
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#endif // !__win32__
 
-
-// Personal Libraries
-#include "Header\ReadGCode.h"
-#include "Header\Renderer.h"
-#include "Header\Thread.h"
-#include "Header\ImGui_Menu.h"
-#include "Header\SelecteurFichier.h"
-#include "Header\Gcode.h"
-#include "Header\GcodeLoader.h"
-#include "Header\SceneOpenGL.h"
-
-
-
-// DEFINES
-#define WINDOW_WIDTH 1600
-#define WINDOW_HEIGTH 900
-
-// Global variable
-bool checkDialog = true;
-bool checkReadGCode = true;
-bool waitSelectPath = false;
-std::string filePath;
-extern std::string line;
-
-/* Functions 
-void openGCode();
-void readGCode();
-void MenuFile(); */
-
-using namespace std;
-
-
-int main()
-{ 
-
-	/////// GCODE LOADING ////////
-	SelecteurFichier sf;
-	std::string filename = sf.select();
-
-	if (filename == "")
-		exit(EXIT_SUCCESS);
+int main(void)
+{
 	
-	Gcode gcode(filename);
-	GcodeLoader gcl;
-	gcl.load(gcode);
+	/* Retreive the screen resolution in pixel */
+	getScreenResolution();
 
-	if (gcode.isLoaded()==0)
-		exit(EXIT_SUCCESS);
+	/* Create a windowed mode window and its OpenGL context */
+	/////(info.WINDOW_WIDTH * 0.9), (info.WINDOW_HEIGTH * 0.9)
+	
+
+
+	recentPath();
+
+
+	
+
+		
+	
+
 	
 	
 
-	//////// SIMULATION ///////////
-
-	//Creation of the scene
-	SceneOpenGL scene("FoamCutter Simulation", WINDOW_WIDTH, WINDOW_HEIGTH);
-
-	//Initialisation of the scene
-	if (scene.initWindow() == false)
-		return -1;
-
-	if (scene.initGL() == false)
-		return -1;
-	
-	//Main loop
-	scene.mainLoop();
-
-
-	//End of program
 	return 0;
 }

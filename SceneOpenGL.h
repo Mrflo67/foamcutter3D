@@ -27,6 +27,7 @@ public:
 
 	bool initWindow();
 	bool initGL();
+	bool initImGUI();
 	void mainLoop();
 
 
