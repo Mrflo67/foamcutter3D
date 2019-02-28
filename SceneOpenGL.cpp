@@ -1,7 +1,6 @@
 #include "Header\SceneOpenGL.h"
 
-#define WINDOW_WIDTH 1600 //in pixels
-#define WINDOW_HEIGTH 900
+
 
 #define BACKGROUND_COLOR 0.0f, 0.0f, 0.4f, 0.0f
 //************************ R     G     B    ALPHA
@@ -89,7 +88,8 @@ bool SceneOpenGL::initWindow()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL 
 
 																   // Open a window and create its OpenGL context
-	m_window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGTH, m_windowTitle.c_str(), NULL, NULL);
+	m_window = glfwCreateWindow(m_windowWidth, 
+		m_windowHeigth, m_windowTitle.c_str(), NULL, NULL);
 	if (m_window == NULL) {
 		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
 		glfwTerminate();
