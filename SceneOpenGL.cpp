@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Header/SceneOpenGL.h"
 #include "Header/ImGui_Menu_windows.h"
 #include "Header/Struct.h"
@@ -24,8 +25,15 @@ void SceneOpenGL::mainLoop()
 {
 	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	do {
+	std::string commandeLue("");
+	int etatSimulation(0); //0=arrêt, 1=lancée, 2=pause
 
+
+
+
+
+
+	do {
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -40,11 +48,7 @@ void SceneOpenGL::mainLoop()
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
-
 		/* Draw */
-
-
-		//todo
 
 
 		// Swap buffers
@@ -116,7 +120,9 @@ bool SceneOpenGL::initImGUI()
 {
 	ImGui::CreateContext();
 	if (ImGui_ImplGlfwGL3_Init(m_window, true) == false)
+	{
 		return false;
+	}
 	ImGui::StyleColorsDark(); /* Display imgui in dark */
 
 	return true;
