@@ -7,6 +7,6 @@ public:
 	GcodeLoader();
 	~GcodeLoader();
 
-	void load(Gcode gc);
+	void load(Gcode &gc);
 };
 

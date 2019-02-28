@@ -1,6 +1,7 @@
+#include "pch.h"
 #include <fstream>
-#include "Header\GcodeLoader.h"
-#include <tfd\tinyfiledialogs.h>
+#include "Header/GcodeLoader.h"
+
 
 GcodeLoader::GcodeLoader()
 {
@@ -11,7 +12,7 @@ GcodeLoader::~GcodeLoader()
 {
 }
 
-void GcodeLoader::load(Gcode gc)
+void GcodeLoader::load(Gcode & gc)
 {
 	std::ifstream gcodeFile(gc.getName());
 

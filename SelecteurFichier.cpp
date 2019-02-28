@@ -1,12 +1,13 @@
-#include "Header/SelecteurFichier.h"
-#include "Header/Gcode.h"
-
-#include "tfd\tinyfiledialogs.h"
+#include <string.h>
 #include <iostream>
 #include <string>
 #include <cstddef>
-#include <string.h>
 #include <fstream> 
+
+#include "pch.h"
+#include "Header/SelecteurFichier.h"
+#include "Header/Gcode.h"
+#include "Header/tinyfiledialogs.h"
 
 #define EXTENSIONS  "*.gco" 
 #define EXTENSION ".gco"
@@ -144,4 +145,3 @@ bool SelecteurFichier::msgErreur(char const* const message)
 {
 	return true; //peut être utile selon la bibliothèque graphique utilisée
 }*/
-

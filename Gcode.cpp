@@ -1,4 +1,5 @@
-#include "Header/Gcode.h"
+#include "pch.h"
+#include "Header\Gcode.h"
 
 
 Gcode::Gcode(std::string n)
@@ -31,12 +32,11 @@ unsigned int Gcode::getTaille()
 
 int Gcode::isLoaded()
 {
-	int loadState = 0;
 
 	if (this->taille > 0)
-		loadState = 1;
+		return 1;
 
-	return loadState;
+	return 0;
 }
 
 void Gcode::setCommandes(std::string cmd)
