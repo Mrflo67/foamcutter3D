@@ -9,12 +9,13 @@ Cube::Cube()
 	glBindVertexArray(m_VertexArrayID);
 
 	m_programID = LoadShaders("src/VertexShader.txt", "src/FragmentShader.txt");
+	m_MatrixID = glGetUniformLocation(m_programID, "MVP");
 
 	// An array of 3 vectors which represents 3 vertices
 	GLfloat vertex_data[] = {
-	   -0.3f, -0.3f, 0.0f,
-	   0.3f, -0.3f, 0.0f,
-	   0.0f,  0.3f, 0.0f,
+	   -1.0, -1.0f, 0.0f,
+	   1.0f, -1.0f, 0.0f,
+	   0.0f,  1.0f, 0.0f,
 	};
 
 	for (int i = 0; i < 8; i++)
@@ -41,13 +42,17 @@ Cube::~Cube()
 	glDeleteProgram(m_programID);
 }
 
-void Cube::afficher()
+void Cube::afficher(glm::mat4 &modelViewController)
 {
 	
-
-
 	// Use our shader
 	glUseProgram(m_programID);
+
+
+	// Send our transformation to the currently bound shader, 
+	// in the "MVP" uniform
+	glUniformMatrix4fv(m_MatrixID, 1, GL_FALSE, &modelViewController[0][0]);
+
 
 	// 1st attribute buffer : vertices
 	glEnableVertexAttribArray(0);
@@ -60,6 +65,10 @@ void Cube::afficher()
 		0,                  // stride
 		(void*)0            // array buffer offset
 	);
+
+
+	
+
 	// Draw the triangle !
 	glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
 	glDisableVertexAttribArray(0);
