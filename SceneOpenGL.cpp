@@ -2,7 +2,7 @@
 #include "Header/SceneOpenGL.h"
 #include "Header/ImGui_Menu_windows.h"
 #include "Header/Struct.h"
-
+#include "Header/Cube.h"
 
 #define BACKGROUND_COLOR 0.0f, 0.0f, 0.4f, 0.0f
 //************************ R     G     B    ALPHA
@@ -28,7 +28,7 @@ void SceneOpenGL::mainLoop()
 	std::string commandeLue("");
 	int etatSimulation(0); //0=arrêt, 1=lancée, 2=pause
 
-
+	Cube cube;
 
 
 
@@ -36,6 +36,9 @@ void SceneOpenGL::mainLoop()
 	do {
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		//draw the cubes
+		cube.afficher();
 
 		ImGui_ImplGlfwGL3_NewFrame();
 
@@ -48,9 +51,7 @@ void SceneOpenGL::mainLoop()
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
-		/* Draw */
-
-
+		
 		// Swap buffers
 		glfwSwapBuffers(m_window);
 		glfwPollEvents();
