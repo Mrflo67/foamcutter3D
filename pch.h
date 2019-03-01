@@ -13,6 +13,10 @@
 #include <IMGUI/imgui.h>
 #include <IMGUI/imgui_impl_glfw_gl3.h>
 
+
+/*MATH Libraries*/
+#include <glm/gtc/matrix_transform.hpp>
+
 /* CPP Includes */
 #include <iostream>
 #include <thread>
