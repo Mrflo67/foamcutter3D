@@ -4,8 +4,12 @@
 #include "Header/Struct.h"
 #include "Header/Cube.h"
 
-#define BACKGROUND_COLOR 0.0f, 0.0f, 0.4f, 0.0f
+#define BACKGROUND_COLOR 1.0f, 1.0f, 1.0f, 0.0f
 //************************ R     G     B    ALPHA
+
+#define FIELD_OF_VIEW 70.0f
+#define CAM_POS 0, 0, 7
+//*************X, Y, Z
 
 
 SceneOpenGL::SceneOpenGL(std::string windowTitle, int windowWidth, int windowHeigth):
@@ -29,31 +33,67 @@ void SceneOpenGL::mainLoop()
 	int etatSimulation(0); //0=arrêt, 1=lancée, 2=pause
 	
 	Cube cube;
-
-	//Cube cube2;
+	Cube cube2;
+	Cube cube3;
 
 	// Projection matrix : Field of View, ratio, display range : 0.1 unit <-> 100 units
-	glm::mat4 Projection = glm::perspective(glm::radians(40.0f), (float)info.WINDOW_WIDTH / (float)info.WINDOW_HEIGTH, 0.1f, 100.0f);
+	glm::mat4 Projection = glm::perspective(glm::radians(FIELD_OF_VIEW), (float)info.WINDOW_WIDTH / (float)info.WINDOW_HEIGTH, 0.1f, 100.0f);
+
+	//glm::mat4 Projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -5.0f, 5.0f);
 	glm::mat4 View  = glm::lookAt(
-		glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
+		glm::vec3(CAM_POS), // Camera is at (4,3,3), in World Space
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
 
-	// Model matrix : an identity matrix (model will be at the origin)
-	glm::mat4 Model = glm::mat4(1.0f);
+	// Model matrix : model position in the 3D world
+	glm::mat4 Model = glm::mat4(1.0f); 
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	glm::mat4 mvp = Projection * View * Model; // Remember, matrix multiplication is the other way around
 
 
+	//generate mvp for second model
+
+	glm::mat4 Model2 = glm::mat4(1.0f);
+	glm::mat4 mvp2 = Projection * View * Model2;
+
+	//generate mvp for third model
+
+	glm::mat4 Model3 = glm::mat4(1.0f);
+	glm::mat4 mvp3 = Projection * View * Model3;
 
 	do {
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+
+
+
+
+		glm::mat4 saveModel = Model;
+		glm::mat4 saveModel2 = Model2;
+		glm::mat4 saveModel3 = Model3;
+
+		Model = glm::translate(Model, glm::vec3(0.0f, 0.0f, 0.0f));
+		Model2 = glm::translate(Model2, glm::vec3(2.0f, 3.0f, 0.0f));
+		Model3 = glm::translate(Model3, glm::vec3(-2.0f, -3.0f, -2.0f));
+		mvp = Projection * View * Model;
+		mvp2 = Projection * View * Model2;
+		mvp3 = Projection * View * Model3;
+
 		//draw the cubes
 		cube.afficher(mvp);
-		//cube2.afficher(mvp);
+		cube2.afficher(mvp2);
+		cube3.afficher(mvp3);
+		
+
+		Model = saveModel;
+		Model2 = saveModel2;
+		Model3 = saveModel3;
+		mvp = Projection * View * Model;
+		mvp2 = Projection * View * Model2;
+		mvp3 = Projection * View * Model3;
+
+
 
 		ImGui_ImplGlfwGL3_NewFrame();
 
@@ -76,6 +116,9 @@ void SceneOpenGL::mainLoop()
 		glfwWindowShouldClose(m_window) == 0);
 
 	
+
+
+
 }
 
 
@@ -114,6 +157,11 @@ bool SceneOpenGL::initWindow()
 	// Dark blue background
 	glClearColor(BACKGROUND_COLOR);
 
+	// Enable depth test
+	glEnable(GL_DEPTH_TEST);
+	// Accept fragment if it closer to the camera than the former one
+	glDepthFunc(GL_LESS);
+
 	return true;
 }
 
@@ -139,6 +187,7 @@ bool SceneOpenGL::initImGUI()
 	{
 		return false;
 	}
+
 	ImGui::StyleColorsDark(); /* Display imgui in dark */
 
 	return true;
