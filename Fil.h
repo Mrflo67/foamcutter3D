@@ -1,17 +1,17 @@
 #pragma once
-
-class Cube
+class Fil
 {
 public:
-	Cube();
-	~Cube();
+	Fil();
+	~Fil();
 	void afficher(glm::mat4 &mvpMatrix);
+	void majPos(GLfloat newVertexData[]);
 
 private:
 
-	GLfloat m_vertex[12*3*3];
-	GLfloat m_color[12 * 3 * 3];
-	GLuint m_programID=NULL;
+	GLfloat m_vertex[2*3];
+	GLfloat m_color[6];
+	GLuint m_programID = NULL;
 	// This will identify our vertex buffer
 	GLuint m_vertexbuffer;
 	GLuint m_colorbuffer;

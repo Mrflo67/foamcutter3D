@@ -3,6 +3,7 @@
 #include "Header/ImGui_Menu_windows.h"
 #include "Header/Struct.h"
 #include "Header/Cube.h"
+#include "Header/Fil.h"
 
 #define BACKGROUND_COLOR 1.0f, 1.0f, 1.0f, 0.0f
 //************************ R     G     B    ALPHA
@@ -10,6 +11,15 @@
 #define FIELD_OF_VIEW 70.0f
 #define CAM_POS 0, 0, 7
 //*************X, Y, Z
+
+
+#define filPosX filVertexData[0]
+#define filPosY filVertexData[1]
+#define filPosZ filVertexData[2]
+#define filPosU filVertexData[3]
+#define filPosV filVertexData[4]
+#define filPosW filVertexData[5]
+
 
 
 SceneOpenGL::SceneOpenGL(std::string windowTitle, int windowWidth, int windowHeigth):
@@ -31,71 +41,74 @@ void SceneOpenGL::mainLoop()
 
 	std::string commandeLue("");
 	int etatSimulation(0); //0=arrêt, 1=lancée, 2=pause
-	
+	float vitesseSimulation(0.1); //min 0.1 max 1.0
+
 	Cube cube;
-	Cube cube2;
-	Cube cube3;
+	Fil fil;
 
 	// Projection matrix : Field of View, ratio, display range : 0.1 unit <-> 100 units
 	glm::mat4 Projection = glm::perspective(glm::radians(FIELD_OF_VIEW), (float)info.WINDOW_WIDTH / (float)info.WINDOW_HEIGTH, 0.1f, 100.0f);
 
-	//glm::mat4 Projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -5.0f, 5.0f);
+	//glm::mat4 Projection = glm::ortho(0.0f, 400.0f, 0.0f, 400.0f, -10.0f, 10.0f);
 	glm::mat4 View  = glm::lookAt(
 		glm::vec3(CAM_POS), // Camera is at (4,3,3), in World Space
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
 
-	// Model matrix : model position in the 3D world
-	glm::mat4 Model = glm::mat4(1.0f); 
+	// ModelCube matrix : ModelCube position in the 3D world
+	glm::mat4 ModelCube = glm::mat4(1.0f); 
+	glm::mat4 ModelCubeFil = glm::mat4(1.0f);
 	// Our ModelViewProjection : multiplication of our 3 matrices
-	glm::mat4 mvp = Projection * View * Model; // Remember, matrix multiplication is the other way around
+	glm::mat4 mvp = Projection * View * ModelCube; // Remember, matrix multiplication is the other way around
+	glm::mat4 mvpFil = Projection * View * ModelCubeFil;
 
+	glm::vec3 translation(0.0f, 0.0f, 0.0f);
+	
+	GLfloat filVertexData[] = {
+		0.0f, 0.0f, 0.0f,
+		5.0f,0.0f, 0.0f,
 
-	//generate mvp for second model
+	};
 
-	glm::mat4 Model2 = glm::mat4(1.0f);
-	glm::mat4 mvp2 = Projection * View * Model2;
-
-	//generate mvp for third model
-
-	glm::mat4 Model3 = glm::mat4(1.0f);
-	glm::mat4 mvp3 = Projection * View * Model3;
 
 	do {
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		ImGui_ImplGlfwGL3_NewFrame();
 
+		glm::mat4 saveModelCube = ModelCube;
+		glm::mat4 saveModelCubeFil = ModelCubeFil;
 
-
-		glm::mat4 saveModel = Model;
-		glm::mat4 saveModel2 = Model2;
-		glm::mat4 saveModel3 = Model3;
-
-		Model = glm::translate(Model, glm::vec3(0.0f, 0.0f, 0.0f));
-		Model2 = glm::translate(Model2, glm::vec3(2.0f, 3.0f, 0.0f));
-		Model3 = glm::translate(Model3, glm::vec3(-2.0f, -3.0f, -2.0f));
-		mvp = Projection * View * Model;
-		mvp2 = Projection * View * Model2;
-		mvp3 = Projection * View * Model3;
+		ModelCube = glm::translate(ModelCube, translation);
+		mvp = Projection * View * ModelCube;
+		
+		fil.majPos(filVertexData);
 
 		//draw the cubes
+		fil.afficher(mvpFil);
 		cube.afficher(mvp);
-		cube2.afficher(mvp2);
-		cube3.afficher(mvp3);
+		
+		
+		ModelCube = saveModelCube;
+		mvp = Projection * View * ModelCube;
 		
 
-		Model = saveModel;
-		Model2 = saveModel2;
-		Model3 = saveModel3;
-		mvp = Projection * View * Model;
-		mvp2 = Projection * View * Model2;
-		mvp3 = Projection * View * Model3;
+		ImGui::Begin("Transforms");
+		{
+			ImGui::SliderFloat("TranslationCubeX", &translation.x, -5.0f, 5.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("TranslationCubeY", &translation.y, -5.0f, 5.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("TranslationCubeZ", &translation.z, -5.0f, 5.0f, "%.3f", 1.0f);
 
+			ImGui::SliderFloat("TranslationXFil", &filPosX, -5.0f, 5.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("TranslationYFil", &filPosY, -5.0f, 5.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("TranslationZFil", &filPosZ, -5.0f, 5.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("TranslationUFil", &filPosU, -5.0f, 5.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("TranslationVFil", &filPosV, -5.0f, 5.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("TranslationZ2Fil", &filPosW, -5.0f, 5.0f, "%.3f", 1.0f);
 
-
-		ImGui_ImplGlfwGL3_NewFrame();
+		}ImGui::End();
 
 		/* Display the menu bar at the top of the window */
 		AppMainMenuBar();
