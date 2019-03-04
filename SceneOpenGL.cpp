@@ -45,6 +45,12 @@ void SceneOpenGL::mainLoop()
 
 	Cube cube;
 	Fil fil;
+	
+	GLfloat filVertexData[] = {
+		0.0f, 0.0f, 0.0f,
+		5.0f,0.0f, 0.0f,
+
+	};
 
 	// Projection matrix : Field of View, ratio, display range : 0.1 unit <-> 100 units
 	glm::mat4 Projection = glm::perspective(glm::radians(FIELD_OF_VIEW), (float)info.WINDOW_WIDTH / (float)info.WINDOW_HEIGTH, 0.1f, 100.0f);
@@ -65,11 +71,19 @@ void SceneOpenGL::mainLoop()
 
 	glm::vec3 translation(0.0f, 0.0f, 0.0f);
 	
-	GLfloat filVertexData[] = {
-		0.0f, 0.0f, 0.0f,
-		5.0f,0.0f, 0.0f,
 
-	};
+
+	/* ROTATION CUBE*/
+	
+	//glm::vec3 EulerAngles(RotationAroundXInRadians, RotationAroundYInRadians, RotationAroundZInRadians);
+	glm::vec3 rotation(0, 0, 0);
+	
+	glm::quat myQuaternion;
+	
+	myQuaternion = glm::quat(rotation);
+	
+	
+
 
 
 	do {
@@ -79,10 +93,13 @@ void SceneOpenGL::mainLoop()
 		ImGui_ImplGlfwGL3_NewFrame();
 
 		glm::mat4 saveModelCube = ModelCube;
-		glm::mat4 saveModelCubeFil = ModelCubeFil;
-
+		
 		ModelCube = glm::translate(ModelCube, translation);
+		myQuaternion = glm::quat(rotation);
+		ModelCube *= glm::mat4_cast(myQuaternion);
+		
 		mvp = Projection * View * ModelCube;
+
 		
 		fil.majPos(filVertexData);
 
@@ -107,6 +124,8 @@ void SceneOpenGL::mainLoop()
 			ImGui::SliderFloat("TranslationUFil", &filPosU, -5.0f, 5.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("TranslationVFil", &filPosV, -5.0f, 5.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("TranslationZ2Fil", &filPosW, -5.0f, 5.0f, "%.3f", 1.0f);
+
+			ImGui::SliderFloat("Rotation Cube Y", &rotation.y, -3.14f, 3.14f, "%.3f", 1.0f);
 
 		}ImGui::End();
 
