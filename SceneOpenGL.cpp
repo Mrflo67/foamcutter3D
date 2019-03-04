@@ -79,10 +79,10 @@ void SceneOpenGL::mainLoop()
 	glm::vec3 rotation(0, 0, 0);
 	
 	glm::quat myQuaternion;
-	
 	myQuaternion = glm::quat(rotation);
 	
-	
+	float rotationAngle = 0;
+
 
 
 
@@ -95,7 +95,9 @@ void SceneOpenGL::mainLoop()
 		glm::mat4 saveModelCube = ModelCube;
 		
 		ModelCube = glm::translate(ModelCube, translation);
+		rotation = glm::vec3(0, (rotation.y + rotationAngle), 0);
 		myQuaternion = glm::quat(rotation);
+		rotationAngle = 0;
 		ModelCube *= glm::mat4_cast(myQuaternion);
 		
 		mvp = Projection * View * ModelCube;
@@ -125,7 +127,7 @@ void SceneOpenGL::mainLoop()
 			ImGui::SliderFloat("TranslationVFil", &filPosV, -5.0f, 5.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("TranslationZ2Fil", &filPosW, -5.0f, 5.0f, "%.3f", 1.0f);
 
-			ImGui::SliderFloat("Rotation Cube Y", &rotation.y, -3.14f, 3.14f, "%.3f", 1.0f);
+			ImGui::SliderFloat("Rotation Cube Y", &rotationAngle, -0.1f, 0.1f, "%.3f", 1.0f);
 
 		}ImGui::End();
 
