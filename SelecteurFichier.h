@@ -10,6 +10,7 @@ private:
 	bool msgErreur(char const* const message); //afficher message d'erreur
 	bool verifierExtension(char const* nom);
 	bool verifierLongueur(char const* nom);
+	bool verifierContenu(char const* nom);
 
 public:
 
