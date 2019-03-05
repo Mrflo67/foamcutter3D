@@ -28,6 +28,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <cstddef>
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>

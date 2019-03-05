@@ -1,9 +1,3 @@
-#include <string.h>
-#include <iostream>
-#include <string>
-#include <cstddef>
-#include <fstream> 
-
 #include "pch.h"
 #include "Header/SelecteurFichier.h"
 #include "Header/Gcode.h"
@@ -13,11 +7,65 @@
 #define EXTENSION ".gco"
 #define TAILLELIMITE 1024*1024*100
 
+
+#define COMMANDES_G "G0 G1 G4 G28 G90 G91 G92"
+#define COMMANDES_M "M0 M1 M2 M3 M5"
+#define COMMANDES_CONNUES "G M S F P\
+X Y U V B"
+
 SelecteurFichier::SelecteurFichier()
 {}
 
 SelecteurFichier::~SelecteurFichier()
 {}
+
+
+bool SelecteurFichier::verifierContenu(char const* nom)
+{
+	std::ifstream fichier(nom);
+	std::string commandeLue;
+
+	std::string commandesConnues(COMMANDES_CONNUES);
+	std::string commandes_M(COMMANDES_M);
+	std::string commandes_G(COMMANDES_G);
+
+	//todo
+	/*
+	while (fichier >> commandeLue)
+	{
+		if (commandesConnues.find(commandeLue[0]) != std::string::npos)
+		{
+			if (commandeLue[0] == 'G' || commandeLue[0] == 'M')
+			{
+				if (commandes_M.find(commandeLue) != std::string::npos)
+				{
+					
+				}
+				else
+				{
+					if (commandes_G.find(commandeLue) != std::string::npos)
+					{
+
+					}
+				} else
+				{
+					return false;
+				}
+			}
+
+		} else
+		{
+			return false;
+		}
+
+	}
+
+	*/
+
+
+	return true;
+}
+
 
 bool SelecteurFichier::verifierExtension(char const* nom)
 {
@@ -54,13 +102,13 @@ bool SelecteurFichier::verifierLongueur(char const* nom)
 			gcodeFile.close();
 			return false;
 		}
-		gcodeFile.close();
+		
 	}
 	else
 	{
 		msgErreur("Ouverture impossible!\nVeuillez reessayer");
 		return false;
-	}
+	}gcodeFile.close();
 	return true;
 }
 
@@ -91,7 +139,6 @@ std::string SelecteurFichier::select()
 			msgErreur("Choix du gcode annulé, fermeture du programme...");
 			break;
 		}
-			
 
 		if(!verifierExtension(fichierChoisi))
 		{
@@ -105,8 +152,16 @@ std::string SelecteurFichier::select()
 			}
 			else
 			{
-				nomFichierGcode = fichierChoisi;
-				msgSucces("Fichier selectionné ! Chargement en cours...");
+				if (!verifierContenu(fichierChoisi))
+				{
+					msgErreur("Des commandes inconnues ont été détectées dans le fichier");
+				}
+				else
+				{
+					nomFichierGcode = fichierChoisi;
+					msgSucces("Fichier selectionné ! Chargement en cours...");
+				}
+				
 			}
 		}	
 	}
