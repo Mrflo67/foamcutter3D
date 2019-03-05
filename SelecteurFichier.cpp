@@ -8,10 +8,9 @@
 #define TAILLELIMITE 1024*1024*100
 
 
-#define COMMANDES_G "G0 G1 G4 G28 G90 G91 G92"
+#define COMMANDES_G "G0 G1 G4 G17 G21 G28 G90 G91 G92"
 #define COMMANDES_M "M0 M1 M2 M3 M5"
-#define COMMANDES_CONNUES "G M S F P\
-X Y U V B"
+#define COMMANDES_CONNUES "G M S F P X Y U V B"
 
 SelecteurFichier::SelecteurFichier()
 {}
@@ -19,7 +18,9 @@ SelecteurFichier::SelecteurFichier()
 SelecteurFichier::~SelecteurFichier()
 {}
 
-
+//returns true if all gcode commands are known
+//returns false if gcode contains unknown commands
+//doesn't check numeric values
 bool SelecteurFichier::verifierContenu(char const* nom)
 {
 	std::ifstream fichier(nom);
@@ -29,40 +30,44 @@ bool SelecteurFichier::verifierContenu(char const* nom)
 	std::string commandes_M(COMMANDES_M);
 	std::string commandes_G(COMMANDES_G);
 
-	//todo
-	/*
-	while (fichier >> commandeLue)
+	if (fichier.is_open())
 	{
-		if (commandesConnues.find(commandeLue[0]) != std::string::npos)
+		std::cout << "Début de l'analyse des commandes contenues dans le fichier" << std::endl;
+		while (fichier >> commandeLue)
 		{
-			if (commandeLue[0] == 'G' || commandeLue[0] == 'M')
+			//find() returns npos if the string has not been found
+			if (commandesConnues.find(commandeLue[0]) != std::string::npos)
 			{
-				if (commandes_M.find(commandeLue) != std::string::npos)
+				if (commandeLue[0] == 'G' || commandeLue[0] == 'M')
 				{
-					
-				}
-				else
-				{
-					if (commandes_G.find(commandeLue) != std::string::npos)
+					if (commandes_G.find(commandeLue) == std::string::npos)
 					{
-
+						if (commandes_M.find(commandeLue) == std::string::npos)
+						{
+							return false;
+						}
 					}
-				} else
-				{
-					return false;
 				}
+
+			}
+			else
+			{
+				return false;
 			}
 
-		} else
-		{
-			return false;
+			/* DEBUG*/
+			//std::cout << "commandeLue :    " << commandeLue << std::endl;
+			//std::cout << "CommandeLue[0] : " << commandeLue[0]<<std::endl;
 		}
-
+		fichier.close();
+	} 
+	else
+	{
+		std::cout << "Ouverture du fichier impossible" << std::endl;
+		return false;
 	}
-
-	*/
-
-
+	
+	std::cout << "Contenu valide, chargement du fichier..." << std::endl;
 	return true;
 }
 
