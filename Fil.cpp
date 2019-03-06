@@ -39,7 +39,7 @@ Fil::Fil()
 	// The following commands will talk about our 'vertexbuffer' buffer
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexbuffer);
 	// Give our vertices to OpenGL.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertex), m_vertex, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertex), m_vertex, GL_DYNAMIC_DRAW);
 
 
 	glGenBuffers(1, &m_colorbuffer);
@@ -72,7 +72,6 @@ void Fil::majPos(GLfloat newVertexData[])
 
 void Fil::afficher(glm::mat4 &mvpMatrix)
 {
-
 	// Use our shader
 	glUseProgram(m_programID);
 
