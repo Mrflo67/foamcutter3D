@@ -124,6 +124,19 @@ Cube::~Cube()
 	glDeleteProgram(m_programID);
 }
 
+
+glm::mat4 Cube::rotationY(float rotationAngle)
+{
+	m_rotationY += rotationAngle;
+	glm::vec3 rotation = glm::vec3(0, m_rotationY, 0);
+	glm::quat cubeQuaternion = glm::quat(rotation);
+
+
+	return glm::mat4_cast(cubeQuaternion);
+}
+
+
+
 void Cube::afficher(glm::mat4 &mvpMatrix)
 {
 	

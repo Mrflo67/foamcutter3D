@@ -6,6 +6,7 @@ public:
 	Cube();
 	~Cube();
 	void afficher(glm::mat4 &mvpMatrix);
+	glm::mat4 rotationY(float rotationAngle);
 
 private:
 
@@ -19,5 +20,7 @@ private:
 	GLuint m_VertexArrayID;
 
 	GLuint m_MatrixID;
+
+	float m_rotationY = 0.0f;
 };
 
