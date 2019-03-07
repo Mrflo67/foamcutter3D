@@ -6,6 +6,7 @@
 #pragma once
 
 /* OpenGL Libraries */
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -29,7 +30,6 @@
 #include <sstream>
 #include <fstream>
 #include <cstddef>
-#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,5 +37,12 @@
 #include <sys/stat.h>
 #include <vector>
 #include <algorithm>
+
+#ifdef _WIN32
+#include <windows.h> //debug, should not be used in the final code
+#elif __linux__
+#include <X11/Xlib.h>
+#endif
+
 
 #include "Header/tinyfiledialogs.h"

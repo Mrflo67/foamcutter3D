@@ -7,16 +7,40 @@
 #include "Header/Headers.h"
 #include "Header/Struct.h"
 
+
 struct WindowInfo info;
 struct ImguiCheckBool Render_Open;
 struct FileContent content;
 
-/* Retreive screen resolution in pixel */
+
+#ifdef _WIN32 // note the underscore: without it, it's not msdn official!
+
 void getScreenResolution()
 {
 	info.WINDOW_WIDTH = (int)GetSystemMetrics(SM_CXSCREEN);
-	info.WINDOW_HEIGTH = (int)GetSystemMetrics(SM_CYSCREEN);
+	info.WINDOW_HEIGHT = (int)GetSystemMetrics(SM_CYSCREEN);
 }
+
+#elif __unix__ // all unices
+
+void getScreenResolution()
+{
+	Display* d = XOpenDisplay(NULL);
+	Screen*  s = DefaultScreenOfDisplay(d);
+
+	info.WINDOW_WIDTH = s->width
+	info.WINDOW_HEIGHT = s->height
+}
+
+#elif __APPLE__
+// Mac OS, not sure if this is covered by __posix__ and/or __unix__ though...
+#endif
+
+
+
+
+/* Retreive screen resolution in pixel */
+
 
 /* Save the FilePath to a .txt file */
 void savePath()
@@ -170,7 +194,7 @@ void GCodeInfo(bool* p_open)
 	/* Set the GCode window to be fixed */
 	ImVec2 window_pos_pivot = ImVec2((info.corner & 1) ? 1.0f : 0.0f, (info.corner & 2) ? 1.0f : 0.0f);
 	/* Set the GCode window size */
-	ImVec2 window_size = ImVec2(info.WINDOW_WIDTH * 0.2, info.WINDOW_HEIGTH * 0.7);
+	ImVec2 window_size = ImVec2(info.WINDOW_WIDTH * 0.2, info.WINDOW_HEIGHT * 0.7);
 	ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
 	ImGui::SetWindowSize(window_size);
 
@@ -258,6 +282,7 @@ void ImguiRender()
 		ImGui::Text("This is the file you selected : ");
 		ImGui::SameLine();
 		ImGui::Text(content.filePath.c_str()); /* Display the path of the file selected */
+		
 	}
 	ImGui::End(); // END Test
 
