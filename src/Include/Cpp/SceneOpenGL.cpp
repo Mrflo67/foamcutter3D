@@ -21,22 +21,22 @@
 
 #define BACKGROUND_COLOR 1.0f, 1.0f, 1.0f
 
-#define TAILLE_CUBE 1.0f, 1.0f, 1.0f
-#define ECART_BASE_FIL 5.0f
-#define ECART_MOTEURS_FIL 10.0f
-#define HAUTEUR_FIL_INIT 0.2f
+#define LARGEUR_CUBE 1.0f
+#define HAUTEUR_CUBE 1.0f
+#define PROFONDEUR_CUBE 1.0f
 
-#define HAUTEUR_MAX_FIL 5.0f
+#define ECART_X_BASE_FIL 2.0f
+#define ECART_MOTEURS_FIL 5.0f
+#define HAUTEUR_MIN_FIL 0.2f
+#define HAUTEUR_MAX_FIL 3.0f
 
 
 
-
-
-//orthogonal view limits
-#define LEFT_LIMIT -10.0f
-#define RIGHT_LIMIT 10.0f
-#define BOTTOM_LIMIT -10.0f
-#define TOP_LIMIT 10.0f
+//cam limits
+#define LEFT_LIMIT -20.0f
+#define RIGHT_LIMIT 20.0f
+#define BOTTOM_LIMIT -20.0f
+#define TOP_LIMIT 20.0f
 
 
 ////////////////////////////////
@@ -62,25 +62,27 @@ SceneOpenGL::~SceneOpenGL()
 void SceneOpenGL::mainLoop()
 {
 	//A Changer via fichier config
-	const float ecartCubeFil = ECART_BASE_FIL; 
+	const float ecartCubeFil = ECART_X_BASE_FIL; 
 	const float ecartMoteursFil = ECART_MOTEURS_FIL;
-	const float hauteurFilOrigine = HAUTEUR_FIL_INIT;
-	glm::vec3 tailleCube = glm::vec3(TAILLE_CUBE);
+	const float hauteurFilOrigine = HAUTEUR_MIN_FIL;
+	float tCubeX = LARGEUR_CUBE;
+	float tCubeY = HAUTEUR_CUBE;
+	float tCubeZ = PROFONDEUR_CUBE;
+	
 	float hauteurMaxFil = HAUTEUR_MAX_FIL; 
 
-
-	const glm::vec3 cubePos = glm::vec3(ecartCubeFil, 0.0f, 0.0f);
+	const glm::vec3 cubeCentrePos = glm::vec3(0, tCubeY/2, 0);
 
 	/*CAMERA*/
-	const glm::vec3 camTarget = cubePos;
-	const glm::vec3 camPosDefault = glm::vec3(cubePos.x -1.0f, 1.0f, 1.0f);
-	glm::vec3 camPos = camPosDefault;
-	float zoomFactor = 0.6f;
+	const glm::vec3 camTarget = cubeCentrePos;
+	const glm::vec3 camPosDefault = glm::vec3(cubeCentrePos.x - 6.0f, cubeCentrePos.y + 6.0f, cubeCentrePos.z + 6.0f);
+	glm::vec3 camPos = camPosDefault; 
+	float zoomFactor = 1.0f;
 
 
 	/* Add 3D Objects to the scene*/
-	Cube cube(1.0f,1.0f,1.0f);
-	Fil fil(hauteurFilOrigine, ecartMoteursFil);
+	Cube cube(tCubeX, tCubeY, tCubeZ);
+	Fil fil(ecartCubeFil, hauteurFilOrigine, ecartMoteursFil);
 	
 	float posX=0.0f,posY=0.0f, posU=0.0f, posV=0.0f;
 
@@ -89,9 +91,9 @@ void SceneOpenGL::mainLoop()
 	/* INIT MATRIX*/
 	
 	// Projection matrix : Field of View, ratio, display range : 0.1 unit <-> 100 units
-	//glm::mat4 Projection = glm::perspective(glm::radians(70, ratio , 0.1f, 100.0f);
 
-	glm::mat4 Projection = glm::ortho(LEFT_LIMIT*m_ratio*zoomFactor, RIGHT_LIMIT*m_ratio*zoomFactor, BOTTOM_LIMIT*zoomFactor, TOP_LIMIT*zoomFactor,  -100.0f, 100.0f);
+	glm::mat4 Projection = glm::perspective(glm::radians(70.0f), m_ratio , 0.1f, 100.0f);
+	//glm::mat4 ProjectionDefault = Projection;
 	glm::mat4 View  = glm::lookAt(
 		glm::vec3(camPos), // Camera is at (4,3,3), in World Space
 		glm::vec3(camTarget), // and looks at the cube
@@ -101,8 +103,7 @@ void SceneOpenGL::mainLoop()
 
 	// ModelCube matrix : ModelCube position in the 3D world
 	glm::mat4 ModelCube = glm::mat4(1.0f); 
-	ModelCube = glm::translate(ModelCube, glm::vec3(cubePos));
-	ModelCube = glm::scale(ModelCube, tailleCube);
+	//ModelCube = glm::scale(ModelCube, tailleCube);
 	glm::mat4 ModelCubeFil = glm::mat4(1.0f);
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	glm::mat4 mvp = Projection * View * ModelCube; // Remember, matrix multiplication is the other way around
@@ -131,7 +132,8 @@ void SceneOpenGL::mainLoop()
 		ModelCube *= cube.rotationY(rotationAngleInit += rotationAngle);
 		
 
-		glm::mat4 Projection = glm::ortho(LEFT_LIMIT*m_ratio*zoomFactor, RIGHT_LIMIT*m_ratio*zoomFactor, BOTTOM_LIMIT*zoomFactor, TOP_LIMIT*zoomFactor, -100.0f, 100.0f);
+		glm::mat4 Projection = glm::perspective(glm::radians(70.0f * zoomFactor), m_ratio, 0.1f, 100.0f);
+
 		View = glm::lookAt(
 			glm::vec3(camPos), // Camera is at (4,3,3), in World Space
 			glm::vec3(camTarget), // and looks at the target
@@ -142,11 +144,7 @@ void SceneOpenGL::mainLoop()
 		
 
 
-
 		fil.majPos(posX, posY, posU, posV);
-
-
-
 
 
 		//draw 3D objects
@@ -162,7 +160,10 @@ void SceneOpenGL::mainLoop()
 		{
 			if (ImGui::Button("Valeurs par defaut"))
 			{
-				
+				posX = 0;
+				posY = 0;
+				posU = 0;
+				posV = 0;
 
 				
 				rotationAngleInit = 0;
@@ -189,18 +190,18 @@ void SceneOpenGL::mainLoop()
 
 			if (ImGui::Button("Vue dessus "))
 			{
-				camPos = glm::vec3(ecartCubeFil, TOP_LIMIT, 0.01f);
+				camPos = glm::vec3(0, 10.0f, 0.01f);
 			}
 
 			if (ImGui::Button("Vue face "))
 			{
-				camPos = glm::vec3(ecartCubeFil-10.0f, 0.0f, 0.01f);
+				camPos = glm::vec3(-10.0f, 0.0f, 0.1f);
 			}
-			ImGui::SliderFloat("CamPos X", &camPos.x, LEFT_LIMIT-ecartCubeFil, RIGHT_LIMIT+ecartCubeFil, "%.3f", 1.0f);
+			ImGui::SliderFloat("CamPos X", &camPos.x, -10.0f, 10.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("CamPos Y", &camPos.y, -10.0f, 10.0f, "%.3f", 1.0f);
-			ImGui::SliderFloat("CamPos Z", &camPos.z, -1.0f, 1.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("CamPos Z", &camPos.z, -10.0f, 10.0f, "%.3f", 1.0f);
 
-			ImGui::SliderFloat("Zoom", &zoomFactor, 0.1f, 1.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("Zoom", &zoomFactor,1.0f, 0.05f, "%.3f", 1.0f);
 		}ImGui::End();
 
 

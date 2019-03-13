@@ -4,10 +4,11 @@
 #include "loadShader.hpp"
 
 
-Fil::Fil(float hauteurFilOrigine, float ecartMoteursFil)
+Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil)
 {
 	m_hauteurOrigine = hauteurFilOrigine;
 	m_ecartMoteurs = ecartMoteursFil;
+	m_ecartCubeFil = ecartCubeFil;
 
 
 	glGenVertexArrays(1, &m_VertexArrayID);
@@ -19,8 +20,8 @@ Fil::Fil(float hauteurFilOrigine, float ecartMoteursFil)
 
 	// An array of 3 vectors which represents 3 vertices
 	GLfloat vertex_data[] = {
-		0.0f, 0.0f + m_hauteurOrigine, m_ecartMoteurs / 2,
-		0.0f, 0.0f + m_hauteurOrigine, -m_ecartMoteurs / 2,
+		-ecartCubeFil, 0.0f + m_hauteurOrigine, m_ecartMoteurs / 2,
+		-ecartCubeFil, 0.0f + m_hauteurOrigine, -m_ecartMoteurs / 2,
 
 	};
 
@@ -68,8 +69,8 @@ Fil::~Fil()
 void Fil::majPos(float newPos_X, float newPos_Y, float newPos_U, float newPos_V)
 {
 	GLfloat newVertexData[] = {
-		newPos_X, newPos_Y + m_hauteurOrigine, m_ecartMoteurs / 2,
-		newPos_U, newPos_V + m_hauteurOrigine, -m_ecartMoteurs / 2,
+		-m_ecartCubeFil + newPos_X, newPos_Y + m_hauteurOrigine, m_ecartMoteurs / 2,
+		-m_ecartCubeFil + newPos_U, newPos_V + m_hauteurOrigine, -m_ecartMoteurs / 2,
 	};
 
 

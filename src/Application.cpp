@@ -27,7 +27,7 @@
 int main()
 {
 	/////// GCODE LOADING ////////
-	SelecteurFichier sf;
+	/*SelecteurFichier sf;
 	std::string filename = sf.select();
 
 	
@@ -44,6 +44,7 @@ int main()
 	if (gcode.isLoaded() == 0)
 		return 0;
 
+		*/
 	/////// SIMULATION ////////
 		
 	

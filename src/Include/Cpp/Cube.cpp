@@ -9,7 +9,7 @@
 //shaders
 #include "loadShader.hpp"
 
-Cube::Cube(float largeur, float hauteur, float profondeur)
+Cube::Cube( float largeur, float hauteur, float profondeur)
 {
 	glGenVertexArrays(1, &m_VertexArrayID);
 	glBindVertexArray(m_VertexArrayID);
