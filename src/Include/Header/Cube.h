@@ -17,6 +17,10 @@ public:
 
 private:
 
+	float m_longueur;
+	float m_hauteur;
+	float m_profondeur;
+
 	GLfloat m_vertex[12*3*3];
 	GLfloat m_color[12 * 3 * 3];
 	GLuint m_programID;

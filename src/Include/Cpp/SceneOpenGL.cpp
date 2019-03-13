@@ -14,10 +14,14 @@
 #include "imgui_impl_glfw_gl3.h"
 
 #include "SceneOpenGL.h"
+#ifndef RESOLUTION_AUTOSET
+#define RESOLUTION_AUTOSET 1
+#endif
 #include "ImGui_Menu_Windows.h"
 #include "Struct.h"
 #include "Cube.h"
 #include "Fil.h"
+#include "Simulation.h"
 
 #define BACKGROUND_COLOR 1.0f, 1.0f, 1.0f
 
@@ -25,7 +29,7 @@
 #define HAUTEUR_CUBE 1.0f
 #define PROFONDEUR_CUBE 1.0f
 
-#define ECART_X_BASE_FIL 2.0f
+#define ECART_X_BASE_FIL 3.0f
 #define ECART_MOTEURS_FIL 5.0f
 #define HAUTEUR_MIN_FIL 0.2f
 #define HAUTEUR_MAX_FIL 3.0f
@@ -48,9 +52,25 @@
 #define filPosW posW
 
 
-SceneOpenGL::SceneOpenGL(std::string windowTitle, int windowWidth, int windowHeigth):
-m_windowTitle(windowTitle), m_windowWidth(windowWidth), m_windowHeigth(windowHeigth), m_ratio((float)m_windowWidth / m_windowHeigth), m_window(NULL)
+SceneOpenGL::SceneOpenGL(std::string windowTitle, int width, int height):
+m_windowTitle(windowTitle), m_window(NULL)
 {
+	Simulation simu;
+	m_simu = simu;
+
+	if (!RESOLUTION_AUTOSET)
+	{
+		m_windowHeight = height;
+		m_windowWidth = width;
+	}
+	else
+	{
+		getScreenResolution();
+		m_windowWidth = info.WINDOW_WIDTH;
+		m_windowHeight = info.WINDOW_HEIGHT;
+	}
+
+	m_ratio = (float)m_windowWidth / m_windowHeight;
 }
 
 
@@ -58,6 +78,7 @@ SceneOpenGL::~SceneOpenGL()
 {
 	
 }
+
 
 void SceneOpenGL::mainLoop()
 {
@@ -109,8 +130,6 @@ void SceneOpenGL::mainLoop()
 	glm::mat4 mvp = Projection * View * ModelCube; // Remember, matrix multiplication is the other way around
 	glm::mat4 mvpFil = Projection * View * ModelCubeFil;
 
-	
-	
 	/* ROTATION CUBE*/
 	
 	float rotationAngle = 0.0f;
@@ -120,6 +139,16 @@ void SceneOpenGL::mainLoop()
 
 	///std::string commandeLue;
 
+	float posInit = 5.0f;
+	posX = posInit;
+	float posDebut = posX;
+	float posFin = 0.0f;
+	float tmp;
+	float vitesse = 0.1f;
+	float pas = fabs((posFin - posDebut) * (vitesse / 2));
+
+	Simulation simu();
+
 	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
 	do {
 		// Clear the screen
@@ -128,10 +157,8 @@ void SceneOpenGL::mainLoop()
 		ImGui_ImplGlfwGL3_NewFrame();
 
 		glm::mat4 saveModelCube = ModelCube;
-		
 		ModelCube *= cube.rotationY(rotationAngleInit += rotationAngle);
 		
-
 		glm::mat4 Projection = glm::perspective(glm::radians(70.0f * zoomFactor), m_ratio, 0.1f, 100.0f);
 
 		View = glm::lookAt(
@@ -142,10 +169,9 @@ void SceneOpenGL::mainLoop()
 		mvp = Projection * View * ModelCube;
 		mvpFil = Projection * View * ModelCubeFil;
 		
-
-
 		fil.majPos(posX, posY, posU, posV);
 
+		//////////////////////
 
 		//draw 3D objects
 		fil.afficher(mvpFil);
@@ -155,6 +181,44 @@ void SceneOpenGL::mainLoop()
 		ModelCube = saveModelCube;
 		mvp = Projection * View * ModelCube;
 		rotationAngle = 0.0f;
+
+
+		///! SIMULATION !///
+
+		float pas = fabs((posFin - posDebut) * vitesse / 2);
+		if (posDebut < posFin)
+		{
+			if (posX < posFin)
+				posX += pas;
+			else
+			{
+				tmp = posFin;
+				posFin = posDebut;
+				posDebut = tmp;
+			}
+
+		}
+		else
+		{
+			if (posX > posFin)
+				posX -= pas;
+			else
+			{
+				tmp = posFin;
+				posFin = posDebut;
+				posDebut = tmp;
+			}
+
+		}
+
+
+
+
+
+
+
+
+
 
 		ImGui::Begin("Transforms");
 		{
@@ -173,11 +237,15 @@ void SceneOpenGL::mainLoop()
 			ImGui::SliderFloat("TranslationYFil", &filPosY, 0, hauteurMaxFil, "%.3f", 1.0f);
 			ImGui::SliderFloat("TranslationUFil", &filPosU, 0, ecartCubeFil * 2, "%.3f", 1.0f);
 			ImGui::SliderFloat("TranslationVFil", &filPosV, 0, hauteurMaxFil, "%.3f", 1.0f);
+			ImGui::SliderFloat("Vitesse", &vitesse, 1.0f, 0.0f, "%.3f", 0.1f);
 			
 			ImGui::SliderFloat("Rotation Cube Y", &rotationAngle, -0.1f, 0.1f, "%.3f", 1.0f);
 
 			
 		}ImGui::End();
+
+		
+
 
 		ImGui::Begin("Camera pos");
 		{
@@ -253,7 +321,7 @@ bool SceneOpenGL::initWindow()
 
 	// Open a window and create its OpenGL context
 	m_window = glfwCreateWindow(m_windowWidth, 
-		m_windowHeigth, m_windowTitle.c_str(), NULL, NULL);
+		m_windowHeight, m_windowTitle.c_str(), NULL, NULL);
 	if (m_window == NULL)
 	{
 		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
@@ -302,5 +370,13 @@ bool SceneOpenGL::initImGUI()
 
 	return true;
 
+}
+
+bool SceneOpenGL::initSimu()
+{
+	if (!m_simu.ChargerGcode())
+		return false;
+
+	return true;
 }
 

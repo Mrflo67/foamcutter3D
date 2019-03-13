@@ -23,6 +23,7 @@
 #include "Struct.h"
 #include "tinyfiledialogs.h"
 #include "ImGui_Menu_Windows.h"
+#include "SelecteurFichier.h"
 
 struct WindowInfo info;
 struct ImguiCheckBool Render_Open;
@@ -136,26 +137,10 @@ void openFileDialog()
 	char const * lTheOpenFileName;
 	char const * lFilterPatterns[2] = { "*.gco", "*.gcode" };
 
-retry:
-	lTheOpenFileName = tinyfd_openFileDialog("Select the GCode File", "", 2, lFilterPatterns, NULL, 0);
+	SelecteurFichier sf;
+	std::string filename = sf.select();
 
-	if (!lTheOpenFileName)
-	{
-		int error = tinyfd_messageBox("Error", "-The file selected can't be open \n-No file selected", "okcancel", "error", 1);
-
-		/* Set display for error */
-		switch (error)
-		{
-		case 0:
-			ImGui::Text("Unable to open File");
-			break;
-		case 1:
-			goto retry;
-			break;
-		default:
-			ImGui::Text("Unable to open File");
-		}
-	}
+	lTheOpenFileName = filename.c_str();
 
 	if (lTheOpenFileName)
 	{

@@ -10,6 +10,7 @@ private:
 
 public:
 	Gcode(std::string n);
+	Gcode();
 	~Gcode();
 
 	std::string getName();

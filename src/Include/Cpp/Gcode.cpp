@@ -1,12 +1,12 @@
 #include "Gcode.h"
 
 
-Gcode::Gcode(std::string n)
+Gcode::Gcode(std::string n) : name(n), commandes(""), taille(0)
 {
-	this->name = n;
-	this->commandes = "";
-	this->taille = 0;
+
 }
+
+Gcode::Gcode() {}
 
 Gcode::~Gcode()
 {}

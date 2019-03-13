@@ -82,6 +82,13 @@ void Fil::majPos(float newPos_X, float newPos_Y, float newPos_U, float newPos_V)
 		newVertexData);
 }
 
+void Fil::majPos(glm::vec4 pos)
+{
+	//todo
+}
+
+
+
 void Fil::afficher(glm::mat4 &mvpMatrix)
 {
 

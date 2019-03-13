@@ -11,6 +11,7 @@ public:
 	~Fil();
 	void afficher(glm::mat4 &mvpMatrix);
 	void majPos(float, float, float, float);
+	void majPos(glm::vec4 pos);
 
 private:
 
