@@ -27,8 +27,7 @@ int main()
 	
 	SceneOpenGL scene("FoamCutter Simulation");
 
-	if (!scene.initSimu())
-		return 0;
+	scene.initSimu();
 
 	if (!scene.initWindow())
 		return 0;
