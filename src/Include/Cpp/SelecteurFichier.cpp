@@ -37,28 +37,26 @@ bool SelecteurFichier::verifierContenu(char const* nom)
 
 	if (fichier.is_open())
 	{
-		std::cout << "Début de l'analyse des commandes contenues dans le fichier" << std::endl;
+		std::cout << "Debut de l'analyse des commandes contenues dans le fichier" << std::endl;
 		while (fichier >> commandeLue)
 		{
+			std::cout << commandeLue << std::endl;
+
 			//find() returns npos if the string has not been found
-			if (commandesConnues.find(commandeLue[0]) != std::string::npos)
+			if (commandesConnues.find(commandeLue[0]) == std::string::npos)
+				return false;
+
+			if (commandeLue[0] == 'G' || commandeLue[0] == 'M')
 			{
-				if (commandeLue[0] == 'G' || commandeLue[0] == 'M')
+				if (commandes_G.find(commandeLue) == std::string::npos)
 				{
-					if (commandes_G.find(commandeLue) == std::string::npos)
+					if (commandes_M.find(commandeLue) == std::string::npos)
 					{
-						if (commandes_M.find(commandeLue) == std::string::npos)
-						{
-							return false;
-						}
+						return false;
 					}
 				}
-
 			}
-			else
-			{
-				return false;
-			}
+			
 
 			/* DEBUG*/
 			//std::cout << "commandeLue :    " << commandeLue << std::endl;
@@ -69,6 +67,7 @@ bool SelecteurFichier::verifierContenu(char const* nom)
 	else
 	{
 		std::cout << "Ouverture du fichier impossible" << std::endl;
+		msgErreur("Ouverture impossible!\nVeuillez reessayer");
 		return false;
 	}
 	
@@ -83,7 +82,7 @@ bool SelecteurFichier::verifierExtension(char const* nom)
 	{
 		std::string sNom = nom;
 		if(sNom.rfind(EXTENSION)==std::string::npos) //recherche la dernière occurence de l'extension dans le nom
-		{ 
+		{
 			return false;
 		}
 	}
@@ -146,7 +145,6 @@ std::string SelecteurFichier::select()
 
 		if (fichierChoisi == NULL)
 		{
-			msgErreur("Choix du gcode annulé, fermeture du programme...");
 			break;
 		}
 
@@ -158,7 +156,7 @@ std::string SelecteurFichier::select()
 		{
 			if (!verifierLongueur(fichierChoisi))
 			{
-				msgErreur("le fichier est trop grand!\n Veuillez reessayer !");
+				msgErreur("Le fichier est vide ou trop grand!\n Veuillez reessayer !");
 			}
 			else
 			{
@@ -169,7 +167,7 @@ std::string SelecteurFichier::select()
 				else
 				{
 					nomFichierGcode = fichierChoisi;
-					msgSucces("Fichier selectionné ! Chargement en cours...");
+					//msgSucces("Selection reussie");
 				}
 				
 			}
@@ -183,12 +181,12 @@ std::string SelecteurFichier::select()
 bool SelecteurFichier::msgSucces(char const* const message)
 {
 	tinyfd_messageBox(
-		"Succès", // NULL or ""
+		"Info", // NULL or ""
 		message, // NULL or "" may contain \n \t
 		"ok", // "ok" "okcancel" "yesno" "yesnocancel"
-		"info", // "info" "warning" "error" "question"
+		"Info", // "info" "warning" "error" "question"
 		1);
-	// 0 for cancel/no , 1 for ok/yes , 2 for no in yesnocancel
+
 
 	return true;
 }

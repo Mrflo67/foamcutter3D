@@ -13,10 +13,12 @@ public:
 	Gcode();
 	~Gcode();
 
-	std::string getName();
-	std::string getCommandes();
 	void setCommandes(std::string);
+
+	std::string getName();
+	std::string getlineCommand();
 	size_t getTaille();
+
 	int isLoaded();
 };
 

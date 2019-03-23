@@ -1,4 +1,8 @@
 #include "Gcode.h"
+#include <iostream>
+#include <string>
+#include <sstream>
+
 
 
 Gcode::Gcode(std::string n) : name(n), commandes(""), taille(0)
@@ -17,9 +21,23 @@ std::string Gcode::getName()
 	return this->name;
 }
 
-std::string Gcode::getCommandes()
+std::string Gcode::getlineCommand()
 {
-	return this->commandes;
+	std::string sCmdline = std::string("");
+	static unsigned int i = taille;
+
+	if (commandes[i] == '\n')
+		i++;
+	if (i >= taille)
+		i = 0;
+
+	while (commandes[i] != '\n')
+	{
+		sCmdline += commandes[i];
+		i++;
+	}
+	//sCmdline += '\n';
+	return sCmdline;
 }
 
 size_t Gcode::getTaille()

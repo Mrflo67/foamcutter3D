@@ -134,24 +134,26 @@ int openRecent()
 /* Open the filedialog to select GCode */
 void openFileDialog()
 {
-	char const * lTheOpenFileName;
-	char const * lFilterPatterns[2] = { "*.gco", "*.gcode" };
+//	char const * lTheOpenFileName;
+//	char const * lFilterPatterns[2] = { "*.gco", "*.gcode" };
 
 	SelecteurFichier sf;
-	std::string filename = sf.select();
+	std::string lTheOpenFileName = (sf.select()).c_str();
 
-	lTheOpenFileName = filename.c_str();
-
-	if (lTheOpenFileName)
+	if (lTheOpenFileName!="")
 	{
-		/* Patch space */
-		/* Convert char to std::string */
-		std::stringstream ss; /* Set a stringstream variable */
-		ss.str(lTheOpenFileName); /* convert char to std::string */
-		content.filePath = ss.str(); /* Save the filepath */
+		// Patch space 
+		// Convert char to std::string 
+		//std::stringstream ss; // Set a stringstream variable 
+		//ss.str(lTheOpenFileName); // convert char to std::string 
+		content.filePath = lTheOpenFileName;//ss.str(); // Save the filepath 
 		savePath();
 		recentPath();
 	}
+	
+
+
+
 }
 
 /* Read the GCode file selected */
@@ -165,7 +167,7 @@ void readGcode()
 		{
 			while (getline(myFile, (content.line))) /* Get every line of the file selected */
 			{
-				ImGui::Text(content.line.c_str()); /* Display the line */
+				ImGui::TextUnformatted(content.line.c_str()); /* Display the line */
 			}
 			myFile.close(); /* Close the file */
 			content.check = false; /* Set the file to already read */
@@ -282,7 +284,7 @@ void ImguiRender()
 		ImGui::Separator();
 		ImGui::Text("This is the file you selected : ");
 		ImGui::SameLine();
-		ImGui::Text(content.filePath.c_str()); /* Display the path of the file selected */
+		ImGui::TextUnformatted(content.filePath.c_str()); /* Display the path of the file selected */
 		
 	}
 	ImGui::End(); // END Test

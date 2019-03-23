@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Struct.h"
 #include "ImGui_Menu_Windows.h"

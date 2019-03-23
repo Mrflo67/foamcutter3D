@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "Fil.h"
-//shaders
 #include "loadShader.hpp"
 
 
@@ -14,7 +13,7 @@ Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil)
 	glGenVertexArrays(1, &m_VertexArrayID);
 	glBindVertexArray(m_VertexArrayID);
 
-	m_programID = LoadShaders("shaders/VertexShader.txt", "shaders/FragmentShader.txt");
+	m_programID = LoadShaders("shadersFil/FilVertexShader.txt", "shadersFil/FilFragmentShader.txt");
 	m_MatrixID = glGetUniformLocation(m_programID, "MVP");
 
 
@@ -27,9 +26,8 @@ Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil)
 
 
 	static const GLfloat g_color_buffer_data[] = {
-	0.500f,  0.500f,  0.500f,
-	0.500f,  0.500f,  0.500f,
-	
+	0.1f,  0.0f,  0.0f,
+	0.1f,  0.0f,  0.0f,
 	};
 
 

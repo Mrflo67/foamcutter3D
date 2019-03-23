@@ -23,16 +23,16 @@
 #include "Fil.h"
 #include "Simulation.h"
 
-#define BACKGROUND_COLOR 1.0f, 1.0f, 1.0f
+#define BACKGROUND_COLOR 0.9f, 0.9f, 0.9f
 
 #define LARGEUR_CUBE 1.0f
 #define HAUTEUR_CUBE 1.0f
 #define PROFONDEUR_CUBE 1.0f
 
-#define ECART_X_BASE_FIL 3.0f
-#define ECART_MOTEURS_FIL 5.0f
+#define ECART_X_BASE_FIL 2.0f
+#define ECART_MOTEURS_FIL 2.0f
 #define HAUTEUR_MIN_FIL 0.2f
-#define HAUTEUR_MAX_FIL 3.0f
+#define HAUTEUR_MAX_FIL 2.0f
 
 
 
@@ -82,6 +82,7 @@ SceneOpenGL::~SceneOpenGL()
 
 void SceneOpenGL::mainLoop()
 {
+	
 	//A Changer via fichier config
 	const float ecartCubeFil = ECART_X_BASE_FIL; 
 	const float ecartMoteursFil = ECART_MOTEURS_FIL;
@@ -98,13 +99,13 @@ void SceneOpenGL::mainLoop()
 	const glm::vec3 camTarget = cubeCentrePos;
 	const glm::vec3 camPosDefault = glm::vec3(cubeCentrePos.x - 6.0f, cubeCentrePos.y + 6.0f, cubeCentrePos.z + 6.0f);
 	glm::vec3 camPos = camPosDefault; 
-	float zoomFactor = 1.0f;
+	float zoomFactor = 0.4f;
 
-
-	/* Add 3D Objects to the scene*/
 	Cube cube(tCubeX, tCubeY, tCubeZ);
 	Fil fil(ecartCubeFil, hauteurFilOrigine, ecartMoteursFil);
 	
+	m_simu.BindObjects(&cube, &fil);
+
 	float posX=0.0f,posY=0.0f, posU=0.0f, posV=0.0f;
 
 
@@ -139,26 +140,30 @@ void SceneOpenGL::mainLoop()
 
 	///std::string commandeLue;
 
-	float posInit = 5.0f;
+	float posInit = 0.0f;
 	posX = posInit;
 	float posDebut = posX;
 	float posFin = 0.0f;
-	float tmp;
 	float vitesse = 0.1f;
 	float pas = fabs((posFin - posDebut) * (vitesse / 2));
 
-	Simulation simu();
 
 	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
 	do {
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 		ImGui_ImplGlfwGL3_NewFrame();
 
 		glm::mat4 saveModelCube = ModelCube;
-		ModelCube *= cube.rotationY(rotationAngleInit += rotationAngle);
-		
+
+		///! SIMULATION !///
+		if (m_simu.isRunning())
+		{
+			m_simu.SimulerDecoupe(vitesse, ModelCube);
+		}
+
 		glm::mat4 Projection = glm::perspective(glm::radians(70.0f * zoomFactor), m_ratio, 0.1f, 100.0f);
 
 		View = glm::lookAt(
@@ -169,57 +174,21 @@ void SceneOpenGL::mainLoop()
 		mvp = Projection * View * ModelCube;
 		mvpFil = Projection * View * ModelCubeFil;
 		
-		fil.majPos(posX, posY, posU, posV);
+		//fil.majPos(posX, posY, posU, posV);
 
 		//////////////////////
 
 		//draw 3D objects
 		fil.afficher(mvpFil);
 		cube.afficher(mvp);
-		
+	
 		
 		ModelCube = saveModelCube;
 		mvp = Projection * View * ModelCube;
 		rotationAngle = 0.0f;
 
 
-		///! SIMULATION !///
-
-		float pas = fabs((posFin - posDebut) * vitesse / 2);
-		if (posDebut < posFin)
-		{
-			if (posX < posFin)
-				posX += pas;
-			else
-			{
-				tmp = posFin;
-				posFin = posDebut;
-				posDebut = tmp;
-			}
-
-		}
-		else
-		{
-			if (posX > posFin)
-				posX -= pas;
-			else
-			{
-				tmp = posFin;
-				posFin = posDebut;
-				posDebut = tmp;
-			}
-
-		}
-
-
-
-
-
-
-
-
-
-
+		//imgui
 		ImGui::Begin("Transforms");
 		{
 			if (ImGui::Button("Valeurs par defaut"))
@@ -244,16 +213,25 @@ void SceneOpenGL::mainLoop()
 			
 		}ImGui::End();
 
+		ImGui::Begin("Simulation");
+		{
+			if (ImGui::Button("Start"))
+			{
+				m_simu.Demarrer();
+			}
+			if (ImGui::Button("Stop"))
+			{
+				m_simu.Arreter();
+			}
+		}ImGui::End();
 		
-
-
 		ImGui::Begin("Camera pos");
 		{
 
 			if (ImGui::Button("Vue par defaut "))
 			{
 				camPos = glm::vec3(camPosDefault);
-				zoomFactor = 0.5f;
+				zoomFactor = 0.4f;
 			}
 
 			if (ImGui::Button("Vue dessus "))
@@ -314,6 +292,7 @@ bool SceneOpenGL::initWindow()
 	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL 
 	#if __APPLE__
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -335,10 +314,11 @@ bool SceneOpenGL::initWindow()
 	// Dark blue background
 	glClearColor(BACKGROUND_COLOR, 0.0f);
 
-	// Enable depth test
-	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS);
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	
 
 	return true;
 }
