@@ -3,65 +3,73 @@
 *	DEFINE ALL THE IMGUI CONFIGURATION
 */
 
-
 #ifdef _WIN32
-#include <windows.h> //debug, should not be used in the final code
+#include <windows.h> 
 #elif __linux__
 #include <X11/Xlib.h>
 #endif
 
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 #include "imgui.h"
 #include "imgui_impl_glfw_gl3.h"
-#include <stdio.h>
 
+#include <stdio.h>
+#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+
 
 #include "Struct.h"
 #include "tinyfiledialogs.h"
 #include "ImGui_Menu_Windows.h"
-#include "SelecteurFichier.h"
+
+
 
 struct WindowInfo info;
 struct ImguiCheckBool Render_Open;
 struct FileContent content;
 
-
-#ifdef _WIN32 // note the underscore: without it, it's not msdn official!
-
-void getScreenResolution()
+ImguiMenuWindow::ImguiMenuWindow()
 {
-	info.WINDOW_WIDTH = (int)GetSystemMetrics(SM_CXSCREEN);
-	info.WINDOW_HEIGHT = (int)GetSystemMetrics(SM_CYSCREEN);
 }
 
-#elif __unix__ // all unices
-
-void getScreenResolution()
+ImguiMenuWindow::~ImguiMenuWindow()
 {
+}
+
+/* Get screen resolution in pixels */
+void ImguiMenuWindow::getScreenResolution()
+{
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
+
+#ifdef _WIN32
+
+	info.WINDOW_WIDTH = (int)GetSystemMetrics(SM_CXSCREEN);
+	info.WINDOW_HEIGHT = (int)GetSystemMetrics(SM_CYSCREEN);
+
+#elif __unix__
+
 	Display* d = XOpenDisplay(NULL);
 	Screen*  s = DefaultScreenOfDisplay(d);
 
 	info.WINDOW_WIDTH = s->width;
 	info.WINDOW_HEIGHT = s->height;
-}
 
 #elif __APPLE__
-// Mac OS, not sure if this is covered by __posix__ and/or __unix__ though...
+
+	info.WINDOW_WIDTH = 800;
+	info.WINDOW_HEIGHT = 600;
+
 #endif
+}
 
 
-
-
-/* Retreive screen resolution in pixel */
-
-
-/* Save the FilePath to a .txt file */
-void savePath()
+/* Save the most recent FilePath to a .txt file */
+void ImguiMenuWindow::savePath()
 {
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	std::ofstream outfile;
 	outfile.open("SavePath.txt", std::ios::out); // Open the file in read mode
 
@@ -70,10 +78,11 @@ void savePath()
 	outfile.close();
 }
 
-void recentPath()
+void ImguiMenuWindow::recentPath()
 {
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	retrievePath();
-	content.recentFileName.clear();
+	content.recentFileName.clear(); // Reset the content of recentFileName
 
 	int i = 0;
 	int save = -1;
@@ -104,8 +113,9 @@ void recentPath()
 	}
 }
 
-void retrievePath()
+void ImguiMenuWindow::retrievePath()
 {
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	std::ifstream myFile("SavePath.txt");
 
 	if (myFile.is_open())
@@ -118,8 +128,9 @@ void retrievePath()
 	}
 }
 
-int openRecent()
+int ImguiMenuWindow::openRecent()
 {
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	content.filePath = content.fileName;
 	content.fileName.clear();
 
@@ -129,36 +140,25 @@ int openRecent()
 		return 0;
 	}
 	readGcode();
+	return 1;
 }
 
 /* Open the filedialog to select GCode */
-void openFileDialog()
+void ImguiMenuWindow::openFileDialog(Simulation &simu)
 {
-//	char const * lTheOpenFileName;
-//	char const * lFilterPatterns[2] = { "*.gco", "*.gcode" };
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 
-	SelecteurFichier sf;
-	std::string lTheOpenFileName = (sf.select()).c_str();
+	if(simu.ChargerGcode())
+	simu.Init();
 
-	if (lTheOpenFileName!="")
-	{
-		// Patch space 
-		// Convert char to std::string 
-		//std::stringstream ss; // Set a stringstream variable 
-		//ss.str(lTheOpenFileName); // convert char to std::string 
-		content.filePath = lTheOpenFileName;//ss.str(); // Save the filepath 
-		savePath();
-		recentPath();
-	}
-	
-
-
-
+	savePath();
+	recentPath();
 }
 
 /* Read the GCode file selected */
-void readGcode()
+void ImguiMenuWindow::readGcode()
 {
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	std::ifstream myFile(content.filePath); /* Open the file */
 
 	if (&content.check) /* Check if we already read the file / If not read the file */
@@ -167,7 +167,7 @@ void readGcode()
 		{
 			while (getline(myFile, (content.line))) /* Get every line of the file selected */
 			{
-				ImGui::TextUnformatted(content.line.c_str()); /* Display the line */
+				ImGui::Text(content.line.c_str()); /* Display the line */
 			}
 			myFile.close(); /* Close the file */
 			content.check = false; /* Set the file to already read */
@@ -185,26 +185,18 @@ void readGcode()
 	}
 }
 
-void GCodeInfo(bool* p_open)
+void ImguiMenuWindow::GCodeInfo(bool* p_open)
 {
-	/* Every data for the window is in pixel */
-
-	info.DISTANCE = 30.0f; /* Set the distance from the border of the main window and the GCodeInfo window */
-	info.corner = 1; /* Corner : top right */
-
-	/* Set the position of the window */
-	ImVec2 window_pos = ImVec2((info.corner & 1) ? ImGui::GetIO().DisplaySize.x - info.DISTANCE : info.DISTANCE, (info.corner & 2) ? ImGui::GetIO().DisplaySize.y - info.DISTANCE : info.DISTANCE);
-	/* Set the GCode window to be fixed */
-	ImVec2 window_pos_pivot = ImVec2((info.corner & 1) ? 1.0f : 0.0f, (info.corner & 2) ? 1.0f : 0.0f);
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	/* Set the GCode window size */
-	ImVec2 window_size = ImVec2(info.WINDOW_WIDTH * 0.2, info.WINDOW_HEIGHT * 0.7);
-	ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+	ImVec2 window_size = ImVec2(info.WINDOW_WIDTH * 0.2f, info.WINDOW_HEIGHT * 0.7f);
+	ImGui::SetNextWindowPos(ImVec2(info.WINDOW_WIDTH * 0.5f, info.WINDOW_HEIGHT * 0.1f), ImGuiCond_FirstUseEver);
 	ImGui::SetWindowSize(window_size);
 
 	/* Display the window if we open it */
 	if (ImGui::Begin("GCode Contents", p_open))
 	{
-		ImGui::Text("Hello this is the contents of the GCode : ");
+		ImGui::TextUnformatted(content.recentFileName.c_str());
 		ImGui::Separator();
 		readGcode(); /* Function that read the GCode file */
 		ImGui::Separator();
@@ -214,8 +206,9 @@ void GCodeInfo(bool* p_open)
 }
 
 /* Main menu bar fix at the top of the main window */
-void AppMainMenuBar()
-{
+void ImguiMenuWindow::AppMainMenuBar(Simulation &simu) 
+{ 
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	/* Shortcut doesn't work now */
 	if (ImGui::BeginMainMenuBar()) /* Start the main menu bar */
 	{
@@ -223,7 +216,7 @@ void AppMainMenuBar()
 		{
 			if (ImGui::MenuItem("New GCode", NULL)) /* Button open */
 			{
-				openFileDialog();
+				openFileDialog(simu);
 			}
 			if (ImGui::BeginMenu("Recent", "Ctrl+R")) /* Button recent */
 			{
@@ -249,9 +242,83 @@ void AppMainMenuBar()
 		}
 		ImGui::EndMainMenuBar();
 	}
+
 }
 
-void AppFixedOverlay(bool* p_open)
+void ImguiMenuWindow::ImguiRender()
+{
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
+	ImGui::Begin("Informations");
+	{
+		ImGui::SetNextWindowPos(ImVec2(info.WINDOW_WIDTH * 0.1f, info.WINDOW_HEIGHT * 0.5f), ImGuiCond_FirstUseEver);
+		ImGui::Information();
+	}
+	ImGui::End();
+
+	if (Render_Open.open_Gcode)
+	{
+		ImGui::SetNextWindowPos(ImVec2(info.WINDOW_WIDTH * 0.6f, info.WINDOW_HEIGHT * 0.1f), ImGuiCond_FirstUseEver);
+		ImGui::OpenGcode();
+	}
+
+	if (Render_Open.GCode_Info)
+	{
+		GCodeInfo(&Render_Open.GCode_Info);
+	}
+
+	if (Render_Open.show_demo_window)
+	{
+		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+		ImGui::ShowDemoWindow(&Render_Open.show_demo_window);
+	}
+
+}
+
+void ImGui::OpenGcode()
+{
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
+	ImGui::Begin("Open the GCode");
+	ImGui::Text("This is the GCode");
+	ImGui::Separator();
+	ImGui::Checkbox("Show App Fixed Overlay", &Render_Open.show_app_fixed_overlay);
+	if (ImGui::Button("Close GCode"))
+	{
+		Render_Open.open_Gcode = !Render_Open.open_Gcode;
+		Render_Open.show_app_fixed_overlay = !Render_Open.show_app_fixed_overlay;
+	}
+	ImGui::End();
+}
+
+void ImGui::Information(void)
+{
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
+	ImGui::SetNextWindowPos(ImVec2(10, 20), ImGuiCond_FirstUseEver);
+	ImGui::Checkbox("Open GCode", &Render_Open.open_Gcode); /* Make checkbox */
+	ImGui::Checkbox("Show Demo Window", &Render_Open.show_demo_window);
+	ImGui::Checkbox("Show GCode", &Render_Open.GCode_Info);
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); /* Display the actual framerate */
+	 /* Display the path of the file selected */
+}
+
+void ImguiMenuWindow::axisPos(Simulation &simu)
+{
+	float axisValues[4];
+	simu.m_fil->getCurrentPos(axisValues);
+	float rotation = 0.0f;//todo getcurrentRotation
+	ImGui::SetNextWindowBgAlpha(0.3f); // Transparent background
+
+	ImGui::Begin("Axis Values");
+	
+	ImGui::TextUnformatted(simu.getCurrentCmd().c_str());
+	ImGui::Separator();
+	ImGui::Text("X: %f Y: %f",axisValues[0], axisValues[1]);
+	ImGui::Text("U: %f V: %f", axisValues[2], axisValues[3]);
+	ImGui::Text("B: %f", rotation);
+
+	ImGui::End();
+}
+
+void ImguiMenuWindow::AppFixedOverlay(bool* p_open)
 {
 	/* Same as the top one */
 
@@ -273,46 +340,8 @@ void AppFixedOverlay(bool* p_open)
 	}
 }
 
-void ImguiRender()
+
+void ImGui::Transformation(void)
 {
-	ImGui::Begin("Informations");
-	{
-		ImGui::Checkbox("Open GCode", &Render_Open.open_Gcode); /* Make checkbox */
-		ImGui::Checkbox("Show Demo Window", &Render_Open.show_demo_window);
-		ImGui::Checkbox("Show GCode", &Render_Open.GCode_Info);
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); /* Display the actual framerate */
-		ImGui::Separator();
-		ImGui::Text("This is the file you selected : ");
-		ImGui::SameLine();
-		ImGui::TextUnformatted(content.filePath.c_str()); /* Display the path of the file selected */
-		
-	}
-	ImGui::End(); // END Test
-
-	if (Render_Open.open_Gcode)
-	{
-		ImGui::Begin("Open the GCode");
-		ImGui::Text("This is the GCode");
-		ImGui::Separator();
-		ImGui::Checkbox("Show App Fixed Overlay", &Render_Open.show_app_fixed_overlay);
-		if (ImGui::Button("Close GCode"))
-		{
-			Render_Open.open_Gcode = !Render_Open.open_Gcode;
-			Render_Open.show_app_fixed_overlay = !Render_Open.show_app_fixed_overlay;
-		}
-		if (Render_Open.show_app_fixed_overlay)
-			AppFixedOverlay(&Render_Open.show_app_fixed_overlay);
-		ImGui::End();
-	}
-
-	if (Render_Open.GCode_Info)
-	{
-		GCodeInfo(&Render_Open.GCode_Info);
-	}
-
-	if (Render_Open.show_demo_window)
-	{
-		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-		ImGui::ShowDemoWindow(&Render_Open.show_demo_window);
-	}
+	
 }

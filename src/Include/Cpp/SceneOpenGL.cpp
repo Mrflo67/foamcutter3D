@@ -14,33 +14,27 @@
 #include "imgui_impl_glfw_gl3.h"
 
 #include "SceneOpenGL.h"
-#ifndef RESOLUTION_AUTOSET
-#define RESOLUTION_AUTOSET 1
-#endif
-#include "ImGui_Menu_Windows.h"
 #include "Struct.h"
 #include "Cube.h"
 #include "Fil.h"
 #include "Simulation.h"
 
+#ifndef RESOLUTION_AUTOSET
+#define RESOLUTION_AUTOSET 1
+#endif
+#include "ImGui_Menu_Windows.h"
+
+
 #define BACKGROUND_COLOR 0.9f, 0.9f, 0.9f
 
-#define LARGEUR_CUBE 1.0f
-#define HAUTEUR_CUBE 1.0f
-#define PROFONDEUR_CUBE 1.0f
+#define LARGEUR_CUBE 100.0f
+#define HAUTEUR_CUBE 100.0f
+#define PROFONDEUR_CUBE 100.0f
 
-#define ECART_X_BASE_FIL 2.0f
-#define ECART_MOTEURS_FIL 2.0f
-#define HAUTEUR_MIN_FIL 0.2f
-#define HAUTEUR_MAX_FIL 2.0f
-
-
-
-//cam limits
-#define LEFT_LIMIT -20.0f
-#define RIGHT_LIMIT 20.0f
-#define BOTTOM_LIMIT -20.0f
-#define TOP_LIMIT 20.0f
+#define ECART_X_BASE_FIL 400.0f
+#define ECART_MOTEURS_FIL 600.0f
+#define HAUTEUR_MIN_FIL 0.0f
+#define HAUTEUR_MAX_FIL 500.0f
 
 
 ////////////////////////////////
@@ -52,27 +46,38 @@
 #define filPosW posW
 
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	glViewport(0, 0, width, height);
+}
+
 SceneOpenGL::SceneOpenGL(std::string windowTitle, int width, int height):
 m_windowTitle(windowTitle), m_window(NULL)
 {
 	Simulation simu;
 	m_simu = simu;
 
-	if (!RESOLUTION_AUTOSET)
+	ImguiMenuWindow gui;
+	m_gui = gui;
+
+	if (RESOLUTION_AUTOSET)
 	{
-		m_windowHeight = height;
-		m_windowWidth = width;
+		m_gui.getScreenResolution();
+		m_windowWidth = info.WINDOW_WIDTH;
+		m_windowHeight = info.WINDOW_HEIGHT;
 	}
 	else
 	{
-		getScreenResolution();
-		m_windowWidth = info.WINDOW_WIDTH;
-		m_windowHeight = info.WINDOW_HEIGHT;
+		m_windowWidth = 1280;
+		m_windowHeight = 720;
 	}
 
 	m_ratio = (float)m_windowWidth / m_windowHeight;
 }
 
+SceneOpenGL::SceneOpenGL()
+{
+}
 
 SceneOpenGL::~SceneOpenGL()
 {
@@ -82,7 +87,8 @@ SceneOpenGL::~SceneOpenGL()
 
 void SceneOpenGL::mainLoop()
 {
-	
+	m_gui.openFileDialog(m_simu); //charger le gcode
+
 	//A Changer via fichier config
 	const float ecartCubeFil = ECART_X_BASE_FIL; 
 	const float ecartMoteursFil = ECART_MOTEURS_FIL;
@@ -97,10 +103,12 @@ void SceneOpenGL::mainLoop()
 
 	/*CAMERA*/
 	const glm::vec3 camTarget = cubeCentrePos;
-	const glm::vec3 camPosDefault = glm::vec3(cubeCentrePos.x - 6.0f, cubeCentrePos.y + 6.0f, cubeCentrePos.z + 6.0f);
+	const glm::vec3 camPosDefault = glm::vec3(cubeCentrePos.x - 700.0f, cubeCentrePos.y + 700.0f, cubeCentrePos.z + 700.0f);
 	glm::vec3 camPos = camPosDefault; 
-	float zoomFactor = 0.4f;
+	float zoomFactor = 0.65f;
+	float zoomDefault = 0.65f;
 
+	Cube base(ecartCubeFil*2, -1.0f, ECART_MOTEURS_FIL);
 	Cube cube(tCubeX, tCubeY, tCubeZ);
 	Fil fil(ecartCubeFil, hauteurFilOrigine, ecartMoteursFil);
 	
@@ -114,7 +122,7 @@ void SceneOpenGL::mainLoop()
 	
 	// Projection matrix : Field of View, ratio, display range : 0.1 unit <-> 100 units
 
-	glm::mat4 Projection = glm::perspective(glm::radians(70.0f), m_ratio , 0.1f, 100.0f);
+	glm::mat4 Projection = glm::perspective(glm::radians(70.0f*zoomFactor), m_ratio , 0.1f, 2000.0f);
 	//glm::mat4 ProjectionDefault = Projection;
 	glm::mat4 View  = glm::lookAt(
 		glm::vec3(camPos), // Camera is at (4,3,3), in World Space
@@ -135,21 +143,13 @@ void SceneOpenGL::mainLoop()
 	
 	float rotationAngle = 0.0f;
 	float rotationAngleInit = rotationAngle;
-
-	/* SIMULATION*/
-
-	///std::string commandeLue;
-
-	float posInit = 0.0f;
-	posX = posInit;
-	float posDebut = posX;
-	float posFin = 0.0f;
-	float vitesse = 0.1f;
-	float pas = fabs((posFin - posDebut) * (vitesse / 2));
-
+	float vitesse = 1.0f;
+	
+	int etatSimu = 2;//imgui
 
 	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
 	do {
+		//m_ratio = (float)m_windowWidth / m_windowHeight;
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -161,10 +161,17 @@ void SceneOpenGL::mainLoop()
 		///! SIMULATION !///
 		if (m_simu.isRunning())
 		{
-			m_simu.SimulerDecoupe(vitesse, ModelCube);
+			m_simu.SimulerDecoupe(vitesse, ImGui::GetIO().Framerate, ModelCube);
+			//m_simu.Arreter();
+		}
+		else if (!(etatSimu == -1 || etatSimu==3 || etatSimu==2))
+		{
+			etatSimu = 0;
 		}
 
-		glm::mat4 Projection = glm::perspective(glm::radians(70.0f * zoomFactor), m_ratio, 0.1f, 100.0f);
+		m_gui.axisPos(m_simu);
+
+		glm::mat4 Projection = glm::perspective(glm::radians(70.0f * zoomFactor), m_ratio, 0.1f, 2000.0f);
 
 		View = glm::lookAt(
 			glm::vec3(camPos), // Camera is at (4,3,3), in World Space
@@ -179,8 +186,10 @@ void SceneOpenGL::mainLoop()
 		//////////////////////
 
 		//draw 3D objects
+		base.afficher(mvp);
 		fil.afficher(mvpFil);
 		cube.afficher(mvp);
+		
 	
 		
 		ModelCube = saveModelCube;
@@ -189,40 +198,53 @@ void SceneOpenGL::mainLoop()
 
 
 		//imgui
-		ImGui::Begin("Transforms");
-		{
-			if (ImGui::Button("Valeurs par defaut"))
-			{
-				posX = 0;
-				posY = 0;
-				posU = 0;
-				posV = 0;
-
-				
-				rotationAngleInit = 0;
-			}
-
-			ImGui::SliderFloat("TranslationXFil", &filPosX, 0, ecartCubeFil * 2 , "%.3f", 1.0f);
-			ImGui::SliderFloat("TranslationYFil", &filPosY, 0, hauteurMaxFil, "%.3f", 1.0f);
-			ImGui::SliderFloat("TranslationUFil", &filPosU, 0, ecartCubeFil * 2, "%.3f", 1.0f);
-			ImGui::SliderFloat("TranslationVFil", &filPosV, 0, hauteurMaxFil, "%.3f", 1.0f);
-			ImGui::SliderFloat("Vitesse", &vitesse, 1.0f, 0.0f, "%.3f", 0.1f);
-			
-			ImGui::SliderFloat("Rotation Cube Y", &rotationAngle, -0.1f, 0.1f, "%.3f", 1.0f);
-
-			
-		}ImGui::End();
-
+		
 		ImGui::Begin("Simulation");
 		{
 			if (ImGui::Button("Start"))
 			{
 				m_simu.Demarrer();
-			}
-			if (ImGui::Button("Stop"))
+				etatSimu = 1;
+			
+			} ImGui::SameLine();
+			if (ImGui::Button("Pause"))
 			{
-				m_simu.Arreter();
+				if (etatSimu != 0 && etatSimu != -1)
+				{
+					m_simu.Arreter();
+					etatSimu = 3;
+				}
+			}ImGui::SameLine();
+			if (ImGui::Button("Reset"))
+			{
+				etatSimu = -1;
+				m_simu.Init();
 			}
+			
+			if (etatSimu == 2)
+			{
+				ImGui::TextUnformatted("En attente...");
+			}
+			else if (etatSimu == 0)
+			{
+				ImGui::TextUnformatted("Simulation terminee");
+			}
+			else if (etatSimu == 1)
+			{
+				ImGui::TextUnformatted("Simulation en cours...");
+			}
+			else if(etatSimu == -1)
+			{
+				ImGui::TextUnformatted("Simulation reinitialisee");
+			}
+			else
+			{
+				ImGui::TextUnformatted("Simulation en pause");
+			}
+
+
+			ImGui::Separator();
+			ImGui::SliderFloat("Vitesse", &vitesse, 15.0f, 0.001f, "%.3f", 0.1f);
 		}ImGui::End();
 		
 		ImGui::Begin("Camera pos");
@@ -231,30 +253,31 @@ void SceneOpenGL::mainLoop()
 			if (ImGui::Button("Vue par defaut "))
 			{
 				camPos = glm::vec3(camPosDefault);
-				zoomFactor = 0.4f;
+				zoomFactor = zoomDefault;
 			}
-
+			ImGui::SameLine();
 			if (ImGui::Button("Vue dessus "))
 			{
-				camPos = glm::vec3(0, 10.0f, 0.01f);
+				camPos = glm::vec3(0, 1000.0f, 0.01f);
 			}
-
+			ImGui::SameLine();
 			if (ImGui::Button("Vue face "))
 			{
-				camPos = glm::vec3(-10.0f, 0.0f, 0.1f);
+				camPos = glm::vec3(-1000.0f, 0.0f, 0.1f);
 			}
-			ImGui::SliderFloat("CamPos X", &camPos.x, -10.0f, 10.0f, "%.3f", 1.0f);
-			ImGui::SliderFloat("CamPos Y", &camPos.y, -10.0f, 10.0f, "%.3f", 1.0f);
-			ImGui::SliderFloat("CamPos Z", &camPos.z, -10.0f, 10.0f, "%.3f", 1.0f);
 
+			ImGui::SliderFloat("CamPos X", &camPos.x, -1000.0f, 1000.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("CamPos Y", &camPos.y, -1000.0f, 1000.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("CamPos Z", &camPos.z, -1000.0f, 1000.0f, "%.3f", 1.0f);
+			ImGui::Separator();
 			ImGui::SliderFloat("Zoom", &zoomFactor,1.0f, 0.05f, "%.3f", 1.0f);
 		}ImGui::End();
 
 
 		/* Display the menu bar at the top of the window */
-		AppMainMenuBar();
+		m_gui.AppMainMenuBar(m_simu);
 		/* Display all the Imgui windows */
-		ImguiRender();
+		m_gui.ImguiRender();
 
 		/* Render Imgui */
 		ImGui::Render();
@@ -278,10 +301,9 @@ void SceneOpenGL::mainLoop()
 }
 
 
-
-
 bool SceneOpenGL::initWindow()
 {
+
 	glewExperimental = true; // Needed in core profile
 	if (!glfwInit())
 	{
@@ -309,6 +331,7 @@ bool SceneOpenGL::initWindow()
 	}
 
 	glfwMakeContextCurrent(m_window); // Initialize GLEW
+	glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
 	glfwSwapInterval(1); // Enable vsync
 
 	// Dark blue background
@@ -317,8 +340,6 @@ bool SceneOpenGL::initWindow()
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	
 
 	return true;
 }
@@ -354,9 +375,9 @@ bool SceneOpenGL::initImGUI()
 
 bool SceneOpenGL::initSimu()
 {
-	if (!m_simu.ChargerGcode())
-		return false;
+	m_simu.Init();
 
 	return true;
 }
+
 

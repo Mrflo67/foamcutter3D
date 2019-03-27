@@ -5,7 +5,6 @@
 #include "SelecteurFichier.h"
 #include "Gcode.h"
 #include "GcodeLoader.h"
-#include "ImGui_Menu_Windows.h"
 
 #include <iostream>
 #include <fstream>
@@ -24,10 +23,11 @@
 #define _V 3
 #define _B 4
 
-#define VITESSE_RAPIDE 1.0f
+#define VITESSE_RAPIDE 10000.0f
 
 Simulation::Simulation() : m_etat(0), m_absolu(1), m_finCmd(1),
-m_priseOrigineMachine(0), m_priseOrigineProgramme(0)
+m_priseOrigineMachine(0), m_priseOrigineProgramme(0), m_cube(NULL), m_fil(NULL),
+m_vitesseDecoupe(VITESSE_RAPIDE), m_vitesseSimulation(0)
 {
 }
 
@@ -36,22 +36,34 @@ Simulation::~Simulation()
 {
 }
 
-int Simulation::SimulerDecoupe(float vitesse, glm::mat4 &modelMatrix)
+int Simulation::SimulerDecoupe(float vitesse, float framerate, glm::mat4 &modelMatrix)
 {
+
 	m_vitesseSimulation = vitesse;
 	
+
 	if (m_finCmd)
 	{
-		m_currentCmd = m_gcode.getlineCommand();
+		m_currentCmd = m_gcode.getlineCommand(m_reset);
+
 		m_priseOrigineMachine = 0;
 		m_priseOrigineProgramme = 0;
+
+		if (m_reset)
+			m_reset = false;
 
 		AnalyzeCmd();
 		
 	}
 
-	m_finCmd = ExecuteCmd(modelMatrix);
-
+	if (m_vitesseSimulation > 0)
+	{
+		m_finCmd = ExecuteCmd(modelMatrix, framerate);		
+	}
+	else
+	{
+		m_finCmd = 0;
+	}
 
 	return 1;
 }
@@ -61,19 +73,23 @@ int Simulation::AnalyzeCmd()
 {
 	std::stringstream ssCmd;
 	std::string sCmd("");
-	char cmdLetter;
-	float cmdValue;
+	char cmdLetter='G';
+	float cmdValue=0.0f;
 
-	for (int i = 0; i < 5; i++)
-	{
-		m_optionsCmd[i] = 0.0f;
-	}
+	m_fil->getCurrentPos(m_optionsCmd);
+	m_optionsCmd[4] = 0.0f;
 
 	ssCmd << m_currentCmd;
 
 	while (ssCmd >> sCmd)
 	{
-		std::cout << sCmd << std::endl;
+		if (sCmd.rfind("end") != std::string::npos)
+		{
+			m_etat = 0;
+			std::cout << "Arrive au bout du fichier, pas de m2 trouve, arret simulation" << std::endl;
+			m_reset = 1;
+			return 1;
+		}
 
 		cmdLetter = sCmd[0];
 	
@@ -81,7 +97,7 @@ int Simulation::AnalyzeCmd()
 		
 		if (sCmd.length() > 0)
 		{
-			cmdValue = std::stoi(sCmd);
+			cmdValue = std::stof(sCmd);
 		}
 	
 		int axisID=-1;
@@ -101,7 +117,8 @@ int Simulation::AnalyzeCmd()
 				break;
 			case 91: m_absolu = 0;
 				break;
-			case 92: m_priseOrigineProgramme = 1; break;
+			case 92: m_priseOrigineProgramme = 1;
+				break;
 			default: break;
 			}
 		}break;
@@ -132,6 +149,8 @@ int Simulation::AnalyzeCmd()
 		case 'U': axisID = _U; break;
 		case 'V': axisID = _V; break;
 		case 'B': axisID = _B; break;
+		case 'F': m_vitesseDecoupe = cmdValue;
+			break;
 
 		default: std::cout << "Commande inconnue, passage à la suivante" << std::endl;
 		}
@@ -140,8 +159,9 @@ int Simulation::AnalyzeCmd()
 		{
 			if (m_priseOrigineMachine)
 			{
-				//todo : mettre les options des axes à leurs valeurs d'origine
-				//m_optionsCmd[axisID] = origine.x
+				m_optionsCmd[0] = m_optionsCmd[1] = m_optionsCmd[2]
+					= m_optionsCmd[3] = m_optionsCmd[4] = 0.0f;
+
 			}
 			else if (m_priseOrigineProgramme)
 			{
@@ -150,13 +170,18 @@ int Simulation::AnalyzeCmd()
 			}
 			else
 			{
-				m_optionsCmd[axisID] = cmdValue;
+				if (m_absolu)
+				{
+					m_optionsCmd[axisID] = cmdValue;
+
+				}else
+				{
+					float currentPos[4];
+					m_fil->getCurrentPos(currentPos);
+					m_optionsCmd[axisID] = currentPos[axisID] + cmdValue;	
+				}
 			}
 		}
-
-		
-		
-		
 		sCmd.clear();
 	}
 
@@ -165,19 +190,74 @@ int Simulation::AnalyzeCmd()
 
 
 
-int Simulation::ExecuteCmd(glm::mat4 &modelMatrix)
+int Simulation::ExecuteCmd(glm::mat4 &modelMatrix, float framerate)
 {
-	m_cube->rotationY(m_optionsCmd[_B]);
+	static float posDebut[5] = { 0.0f };
+	static float posFin[5] = { 0.0f };
+	static float pos[5] = { 0.0f };
+	float pas = 0;
+	int endCmd = 0;
+	int fini = 0;
 
-	m_fil->majPos(m_optionsCmd[_X], m_optionsCmd[_Y], m_optionsCmd[_U], m_optionsCmd[_V]);
+	if (m_finCmd)
+	{
+		m_fil->getCurrentPos(posDebut);
+		for (int i = _X; i < _B+1; i++)
+		{
+			posFin[i] = m_optionsCmd[i];
+		}
+	}
 
 
-	return 1;
+	m_fil->getCurrentPos(pos);
+
+	fini = 0;
+
+	for (int i = _X; i < _B+1; i++)
+	{
+		pas = m_vitesseSimulation * (m_vitesseDecoupe / VITESSE_RAPIDE) * (VITESSE_RAPIDE / 60. / framerate);
+		
+		if (posDebut[i] < posFin[i])
+		{
+			pos[i] += pas;
+			if (pos[i] > posFin[i])
+			{
+				pos[i] = posFin[i];
+				fini++;
+			}	
+		}
+		else if(posDebut[i] > posFin[i])
+		{
+			pos[i] -= pas;
+			if (pos[i] < posFin[i])
+			{
+				pos[i] = posFin[i];
+				fini++;
+			}
+		}
+		else
+		{
+			fini ++;
+		}
+	}
+
+	std::cout << "fini : " << fini << std::endl;
+
+	if (fini >= 4)
+		endCmd = 1;
+	//std::cout << "fini : " << fini << std::endl;
+		
+
+	m_cube->rotationY(pos[4]);
+
+	m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
+	
+	return endCmd;
 }
 
 int Simulation::isRunning()
 {
-	return m_etat;
+	return m_etat==1;
 }
 
 void Simulation::BindObjects(Cube *cube, Fil *fil)
@@ -197,6 +277,28 @@ void Simulation::Arreter()
 	m_etat = 0;
 }
 
+std::string Simulation::getCurrentCmd()
+{
+	return m_currentCmd;
+}
+
+int Simulation::Init()
+{
+
+	m_reset = true; 
+	m_finCmd = 1;
+	m_absolu = 1;
+	m_etat = 0;
+
+	if (m_cube != NULL && m_fil != NULL)
+	{
+		m_cube->rotationY(0.0f);
+		m_fil->majPos(0.0f, 0.0f, 0.0f, 0.0f);
+	}
+
+	return 1;
+}
+
 bool Simulation::ChargerGcode()
 {
 	SelecteurFichier sf;
@@ -214,8 +316,8 @@ bool Simulation::ChargerGcode()
 		return false;
 
 	content.filePath = filename;
-	
 	m_gcode = gcode;
 
+	
 	return true;
 }

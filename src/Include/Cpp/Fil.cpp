@@ -1,7 +1,7 @@
-#include "pch.h"
+
 #include "Fil.h"
 #include "loadShader.hpp"
-
+#include <iostream>
 
 Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil)
 {
@@ -24,7 +24,6 @@ Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil)
 
 	};
 
-
 	static const GLfloat g_color_buffer_data[] = {
 	0.1f,  0.0f,  0.0f,
 	0.1f,  0.0f,  0.0f,
@@ -37,6 +36,10 @@ Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil)
 		m_color[i] = g_color_buffer_data[i];
 	}
 
+	for (int i = 0; i < 4; i++)
+	{
+		m_currentPos[i] = 0.0f;
+	}
 
 	// Generate 1 buffer, put the resulting identifier in vertexbuffer
 	glGenBuffers(1, &m_vertexbuffer);
@@ -71,6 +74,10 @@ void Fil::majPos(float newPos_X, float newPos_Y, float newPos_U, float newPos_V)
 		-m_ecartCubeFil + newPos_U, newPos_V + m_hauteurOrigine, -m_ecartMoteurs / 2,
 	};
 
+	m_currentPos[0] = newPos_X;
+	m_currentPos[1] = newPos_Y;
+	m_currentPos[2] = newPos_U;
+	m_currentPos[3] = newPos_V;
 
 	// The following commands will talk about our 'vertexbuffer' buffer
 	glBindBuffer(GL_ARRAY_BUFFER, m_vertexbuffer);
@@ -80,10 +87,28 @@ void Fil::majPos(float newPos_X, float newPos_Y, float newPos_U, float newPos_V)
 		newVertexData);
 }
 
-void Fil::majPos(glm::vec4 pos)
+//returns array which contains X,Y,U,V current positions in this order
+void Fil::getCurrentPos(float pos[])
 {
-	//todo
+
+	for (int i = 0; i < 4; i++)
+		pos[i] = m_currentPos[i];
+
 }
+
+//returns array which contains X,Y,U,V origin positions in this order
+void Fil::getOriginPos(float pos[])
+{
+
+	pos[0] = -m_ecartCubeFil;
+	pos[1] = m_hauteurOrigine;
+	pos[2] = pos[1];
+	pos[3] = pos[0];
+
+}
+
+void Fil::setOriginPos(float X, float Y, float U, float V)
+{}
 
 
 

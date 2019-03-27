@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -7,12 +6,12 @@
 #include "ImGui_Menu_Windows.h"
 #include "Simulation.h"
 
-
 class SceneOpenGL
 {
 public:
 
 	SceneOpenGL(std::string windowTitle, int width = 1280, int height = 720);
+	SceneOpenGL();
 	~SceneOpenGL();
 
 	bool initWindow();
@@ -20,7 +19,6 @@ public:
 	bool initImGUI();
 	bool initSimu();
 	void mainLoop();
-
 
 private:
 
@@ -31,5 +29,6 @@ private:
 
 	GLFWwindow* m_window;
 	Simulation m_simu;
+	ImguiMenuWindow m_gui;
 };
 
