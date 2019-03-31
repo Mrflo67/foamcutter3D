@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+
 class Gcode
 {
 private:
@@ -9,14 +10,17 @@ private:
 	size_t taille;
 
 public:
+	Gcode();
 	Gcode(std::string n);
 	~Gcode();
 
-	std::string getName();
-	std::string getCommandes();
 	void setCommandes(std::string);
-	size_t getTaille();
 	int isLoaded();
+	size_t getTaille();
+	std::string getName();
+	std::string getlineCommand(bool reset);
+	std::string getCommandes();
+
 };
 
 
