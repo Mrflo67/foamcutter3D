@@ -1,0 +1,44 @@
+21:17 28/03/2019
+
+- Démarrage en fenêtre maximisée
+- Ajustement du ratio lorsque l'utilisateur redimmensionne la fenêtre
+- Ajustement de la perspective
+- Ajout limite min de la taille de la fenêtre
+
+- Vue de face corrigée
+- Amélioration de la transparence
+- Cube : vertex et couleurs classés en fonction des faces
+
+- Réglage précision des nombres flottants
+sur le GUI
+
+- Correction commande Simulation::Init
+m_current_cmd est vidée à chaque appel
+
+- Réglage zoom + champ de vision
+
+
+15:14 29/03/2019
+
+- Affichage commande actuelle sur gui simulation
+
+15:45 30/03/2019
+
+- Améliorations de l'interface
+- Openrecent fonctionnel
+- Ajout rotation du cube commande B
+- Améliorations lisibilité code
+- Amélioration méthode Charger gcode
+
+17:01 01/04/2019 (RP3)
+
+- Ajout automatique de M2 si la commande n'a pas été trouvée dans le gcode
+- Changement couleur Objets 3D
+- Ajout classe Shader
+- Ajout shader base
+
+08:10 02/04/2019
+
+- Suppression classe GcodeLoader
+- Amélioration chargement gcode 
+- Ajout bibli de mesh cutting

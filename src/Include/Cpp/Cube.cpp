@@ -6,17 +6,19 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "Cube.h"
-//shaders
-#include "loadShader.hpp"
 
-Cube::Cube( float l, float h, float p) : m_longueur(l), m_hauteur(h), m_profondeur(p)
+#include "Shader.h"
+
+Cube::Cube( float l, float h, float p,
+	std::string const vertexShader, std::string const fragmentShader) :
+	m_longueur(l), m_hauteur(h), m_profondeur(p), m_shader(vertexShader, fragmentShader)
 {
+	m_shader.load();
+
 	glGenVertexArrays(1, &m_VertexArrayID);
 	glBindVertexArray(m_VertexArrayID);
 
-	m_programID = LoadShaders("shadersCube/CubeVertexShader.txt", "shadersCube/CubeFragmentShader.txt");
-	m_MatrixID = glGetUniformLocation(m_programID, "MVP");
-
+	
 
 	// An array of 3 vectors which represents 3 vertices
 	GLfloat vertex_data[] = {
@@ -66,48 +68,48 @@ Cube::Cube( float l, float h, float p) : m_longueur(l), m_hauteur(h), m_profonde
 
 
 	static const GLfloat g_color_buffer_data[] = {
-		0.0f, 1.0f, 1.0f, 
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
 
 
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
 
-		0.0f, 0.8f, 0.8f, 
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
 		
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
+		0.7f, 0.0f, 0.0f,
 
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
-		0.0f, 0.9f, 0.9f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
+		0.9f, 0.0f,0.0f,
 
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
-		0.0f, 0.8f, 0.8f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
+		0.8f, 0.0f, 0.0f,
 
 	};
 
@@ -139,14 +141,12 @@ Cube::~Cube()
 	glDeleteBuffers(1, &m_vertexbuffer);
 	glDeleteBuffers(1, &m_colorbuffer);
 	glDeleteVertexArrays(1, &m_VertexArrayID);
-	glDeleteProgram(m_programID);
 }
 
 
 void Cube::rotationY(float rotationAngle)
 {
 	m_rotationY = rotationAngle;
-	
 }
 
 float Cube::getRotationAngle()
@@ -154,16 +154,16 @@ float Cube::getRotationAngle()
 	return m_rotationY;
 }
 
-
 void Cube::afficher(glm::mat4 &mvpMatrix)
 {
 	// Use our shader
-	glUseProgram(m_programID);
+	glUseProgram(m_shader.getProgramID());
 
+	GLuint MatrixID = glGetUniformLocation(m_shader.getProgramID(), "MVP");
 
 	// Send our transformation to the currently bound shader, 
 	// in the "MVP" uniform
-	glUniformMatrix4fv(m_MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
+	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
 
 
 	// 1st attribute buffer : vertices
@@ -190,10 +190,11 @@ void Cube::afficher(glm::mat4 &mvpMatrix)
 		(void*)0                          // array buffer offset
 	);
 
-	
+
 
 	// Draw the triangle !
 	glDrawArrays(GL_TRIANGLES, 0, 12*3);//sizeof(m_vertex)); // Starting from vertex 0; 3 vertices total -> 1 triangle
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
+	glUseProgram(0);
 }

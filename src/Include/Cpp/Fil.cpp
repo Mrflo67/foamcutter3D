@@ -1,21 +1,17 @@
-
 #include "Fil.h"
-#include "loadShader.hpp"
+#include "Shader.h"
 #include <iostream>
 
-Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil)
+Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil,
+	std::string const vertexShader, std::string const fragmentShader) :
+	m_hauteurOrigine(hauteurFilOrigine), m_ecartMoteurs(ecartMoteursFil), m_ecartCubeFil(ecartCubeFil),
+	m_shader(vertexShader, fragmentShader)
 {
-	m_hauteurOrigine = hauteurFilOrigine;
-	m_ecartMoteurs = ecartMoteursFil;
-	m_ecartCubeFil = ecartCubeFil;
-
 
 	glGenVertexArrays(1, &m_VertexArrayID);
 	glBindVertexArray(m_VertexArrayID);
 
-	m_programID = LoadShaders("shadersFil/FilVertexShader.txt", "shadersFil/FilFragmentShader.txt");
-	m_MatrixID = glGetUniformLocation(m_programID, "MVP");
-
+	m_shader.load();
 
 	// An array of 3 vectors which represents 3 vertices
 	GLfloat vertex_data[] = {
@@ -63,7 +59,6 @@ Fil::~Fil()
 	glDeleteBuffers(1, &m_vertexbuffer);
 	glDeleteBuffers(1, &m_colorbuffer);
 	glDeleteVertexArrays(1, &m_VertexArrayID);
-	glDeleteProgram(m_programID);
 }
 
 
@@ -116,12 +111,13 @@ void Fil::afficher(glm::mat4 &mvpMatrix)
 {
 
 	// Use our shader
-	glUseProgram(m_programID);
+	glUseProgram(m_shader.getProgramID());
 
+	GLuint MatrixID = glGetUniformLocation(m_shader.getProgramID(), "MVP");
 
 	// Send our transformation to the currently bound shader, 
 	// in the "MVP" uniform
-	glUniformMatrix4fv(m_MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
+	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
 
 
 	// 1st attribute buffer : vertices
@@ -154,4 +150,5 @@ void Fil::afficher(glm::mat4 &mvpMatrix)
 	glDrawArrays(GL_LINE_STRIP, 0, 2); // Starting from vertex 0; 3 vertices total -> 1 triangle
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
+	glUseProgram(0);
 }

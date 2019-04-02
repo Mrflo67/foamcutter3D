@@ -159,20 +159,15 @@ int ImguiMenuWindow::openRecent(Simulation & simu)
 /* Open the filedialog to select GCode */
 void ImguiMenuWindow::openFileDialog(Simulation &simu)
 {
-	//std::cout << "Mutex is take by : " << __func__ << std::endl;
-
 	SelecteurFichier sf;
 	std::string filename = sf.select();
 
 	if (simu.ChargerGcode(filename))
 	{
 		savePath();
-		
 		content.check = true;
-
 		simu.Init();
 	}
-
 	recentPath();
 }
 

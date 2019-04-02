@@ -4,7 +4,6 @@
 #include "Struct.h"
 #include "SelecteurFichier.h"
 #include "Gcode.h"
-#include "GcodeLoader.h"
 
 #include <iostream>
 #include <fstream>
@@ -15,20 +14,18 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-
-
 #define _X 0
 #define _Y 1
 #define _U 2
 #define _V 3
 #define _B 4
 
-#define VITESSE_RAPIDE 10000.0f
-#define VITESSE_MAX 10.0f
+#define VITESSE_MAX_DECOUPE 10000.0f
+#define VITESSE_MAX_SIMULATION 10.0f
 
-Simulation::Simulation() : m_etat(0), m_absolu(1), m_finCmd(1),
+Simulation::Simulation() : m_etat(0), m_absolu(1), m_finCmd(1), m_reset(1),
 m_priseOrigineMachine(0), m_priseOrigineProgramme(0), m_cube(NULL), m_fil(NULL),
-m_vitesseDecoupe(VITESSE_RAPIDE), m_vitesseSimulation(0), m_gcodeLoaded(0)
+m_vitesseDecoupe(VITESSE_MAX_DECOUPE), m_vitesseSimulation(0), m_gcodeLoaded(0), m_gcode()
 {
 }
 
@@ -54,7 +51,6 @@ int Simulation::SimulerDecoupe(float vitesse, float framerate)
 			m_reset = false;
 
 		AnalyzeCmd();
-		
 	}
 
 	if (m_vitesseSimulation > 0)
@@ -84,22 +80,18 @@ int Simulation::AnalyzeCmd()
 
 	while (ssCmd >> sCmd)
 	{
-		if (sCmd.rfind("end") != std::string::npos)
-		{
-			m_etat = 0;
-			std::cout << "Arrive au bout du fichier, pas de m2 trouve, arret simulation" << std::endl;
-			m_reset = 1;
-			return 1;
-		}
-
 		cmdLetter = sCmd[0];
-	
 		sCmd.erase(0,1);
 		
 		if (sCmd.length() > 0)
 		{
 			cmdValue = std::stof(sCmd);
 		}
+		else
+		{
+			cmdValue = 0.0f;
+		}
+		
 	
 		int axisID=-1;
 
@@ -108,7 +100,7 @@ int Simulation::AnalyzeCmd()
 		case 'G': {
 			switch ((int)cmdValue)
 			{
-			case 0: m_vitesseDecoupe = VITESSE_RAPIDE;
+			case 0: m_vitesseDecoupe = VITESSE_MAX_DECOUPE;
 				break;
 			case 1: break;
 			case 4: break;
@@ -129,7 +121,7 @@ int Simulation::AnalyzeCmd()
 			{
 			case 0: break;
 			case 1: break;
-			case 2: Arreter();
+			case 2: Arreter(); m_reset = 1;
 				break;
 			case 3: break;
 			case 5: break;
@@ -197,8 +189,8 @@ int Simulation::ExecuteCmd(float framerate)
 	static float posDebut[5] = { 0.0f };
 	static float posFin[5] = { 0.0f };
 	static float pos[5] = { 0.0f };
-	float pas = 0;
-	int endCmd = 0;
+	float pas = 0.0f;
+	int endCmd = 0.0f;
 	int fini = 0;
 
 	if (m_finCmd)
@@ -218,10 +210,22 @@ int Simulation::ExecuteCmd(float framerate)
 
 	fini = 0;
 
+	float pasMin = 10.0f;
+
 	for (int i = _X; i < _B+1; i++)
 	{
-		pas = ((m_vitesseSimulation > VITESSE_MAX) * fabs(posFin[i] - posDebut[i])) + m_vitesseSimulation *
-			(m_vitesseDecoupe / VITESSE_RAPIDE) * (VITESSE_RAPIDE / 60.0f / framerate);
+		
+		pas = ((m_vitesseSimulation > VITESSE_MAX_SIMULATION) * fabs(posFin[i] - posDebut[i])) + 
+			m_vitesseSimulation *
+			(m_vitesseDecoupe / VITESSE_MAX_DECOUPE) * (VITESSE_MAX_DECOUPE / 60.0f / framerate);
+
+		if (pas < pasMin)
+		{
+			pasMin = pas;
+			std::cout << "Pas : " << pas << std::endl;
+		}
+			
+
 		
 		if (posDebut[i] < posFin[i])
 		{
@@ -309,26 +313,19 @@ int Simulation::hasGcode()
 
 bool Simulation::ChargerGcode(std::string filename)
 {
-	Gcode gcode(filename);
-	m_gcode = gcode;
+	m_gcodeLoaded = 0;
 
 	if (filename == "")
 	{
-		m_gcodeLoaded = 0;
+		
 		return 0;
 	}
 	else
 	{
-		GcodeLoader gcl;
-		gcl.load(gcode);
-
-		if (!gcode.isLoaded())
-		{
-			m_gcodeLoaded = 0;
-			return false;
-		}
-
+		Gcode gcode(filename);
 		m_gcode = gcode;
+
+		if(m_gcode.isLoaded())
 		m_gcodeLoaded = 1;
 
 		content.filePath = filename;

@@ -40,14 +40,15 @@
 #define HAUTEUR_MIN_FIL 0.0f
 #define HAUTEUR_MAX_FIL 500.0f
 
-
 ////////////////////////////////
-#define filPosX posX
-#define filPosY posY
-#define filPosZ posZ
-#define filPosU posU
-#define filPosV posV
-#define filPosW posW
+#define VERTEX_SHADER_FIL_PATH "shaders/Fil/FilVertexShader.txt"
+#define FRAGMENT_SHADER_FIL_PATH "shaders/Fil/FilFragmentShader.txt"
+
+#define VERTEX_SHADER_CUBE_PATH "shaders/Cube/CubeVertexShader.txt"
+#define FRAGMENT_SHADER_CUBE_PATH "shaders/Cube/CubeFragmentShader.txt"
+
+#define VERTEX_SHADER_BASE_PATH "shaders/Base/BaseVertexShader.txt"
+#define FRAGMENT_SHADER_BASE_PATH "shaders/Base/BaseFragmentShader.txt"
 
 
 SceneOpenGL::SceneOpenGL(std::string windowTitle, int width, int height):
@@ -109,9 +110,9 @@ void SceneOpenGL::mainLoop()
 	float zoomFactor = zoomDefault;
 
 
-	Cube base(ecartCubeFil*2, -1.0f, ECART_MOTEURS_FIL);
-	Cube cube(tCubeX, tCubeY, tCubeZ);
-	Fil fil(ecartCubeFil, hauteurFilOrigine, ecartMoteursFil);
+	Cube base(ecartCubeFil*2, -1.0f, ECART_MOTEURS_FIL, VERTEX_SHADER_BASE_PATH, FRAGMENT_SHADER_BASE_PATH);
+	Cube cube(tCubeX, tCubeY, tCubeZ, VERTEX_SHADER_CUBE_PATH, FRAGMENT_SHADER_CUBE_PATH);
+	Fil fil(ecartCubeFil, hauteurFilOrigine, ecartMoteursFil, VERTEX_SHADER_FIL_PATH, FRAGMENT_SHADER_FIL_PATH);
 	
 	m_simu.BindObjects(&cube, &fil);
 
@@ -365,6 +366,7 @@ bool SceneOpenGL::initWindow()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	glEnable(GL_MULTISAMPLE); //should be enabled by default by the driver
 	glEnable(GL_LINE_SMOOTH);
 
 	return true;
