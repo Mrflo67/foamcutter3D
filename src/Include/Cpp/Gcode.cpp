@@ -6,45 +6,47 @@
 #include "tinyfiledialogs.h"
 
 
-Gcode::Gcode(std::string filename)
+Gcode::Gcode(std::string filename) : m_name(""), m_commandes(""), m_taille(0)
 {
-	std::ifstream gcodeFile(filename, std::fstream::in | std::ios::beg);
-
-	if (gcodeFile.is_open())
+	if (filename.length() > 0)
 	{
-		char c;
-		std::string contenu;
+		std::ifstream gcodeFile(filename, std::fstream::in | std::ios::beg);
 
-		while (gcodeFile.get(c)) //copier le contenu du fichier dans l'attribut "m_commandes de l'objet Gcode
+		if (gcodeFile.is_open())
 		{
-			contenu += c; //On le fait caractère par caractère
-		}
+			char c;
+			std::string contenu;
 
-		if (contenu.rfind("M2") == std::string::npos)
+			while (gcodeFile.get(c)) //copier le contenu du fichier dans l'attribut "m_commandes de l'objet Gcode
+			{
+				contenu += c; //On le fait caractère par caractère
+			}
+
+			if (contenu.rfind("M2") == std::string::npos)
+			{
+				contenu.append(" M2");
+			}
+
+			m_commandes = contenu;
+			m_taille = m_commandes.size();
+			m_name = filename;
+
+			gcodeFile.close();
+		}
+		else
 		{
-			contenu.append(" M2");
+
+			tinyfd_messageBox(
+				"Erreur", // NULL or ""
+				"ouverture impossible, veuillez réessayer!", // NULL or "" may contain \n \t
+				"okcancel", // "ok" "okcancel" "yesno" "yesnocancel"
+				"warning", // "info" "warning" "error" "question"
+				1);
+			// 0 for cancel/no , 1 for ok/yes , 2 for no in yesnocancel
 		}
-
-		m_commandes = contenu;
-		m_taille = m_commandes.size();
-		m_name = filename;
-
-		gcodeFile.close();
 	}
-	else
-	{
-		tinyfd_messageBox(
-			"Erreur", // NULL or ""
-			"ouverture impossible, veuillez réessayer!", // NULL or "" may contain \n \t
-			"okcancel", // "ok" "okcancel" "yesno" "yesnocancel"
-			"warning", // "info" "warning" "error" "question"
-			1);
-		// 0 for cancel/no , 1 for ok/yes , 2 for no in yesnocancel
-	}
+	
 }
-
-Gcode::Gcode() : m_name(""), m_commandes(""), m_taille(0)
-{}
 
 Gcode::~Gcode()
 {}

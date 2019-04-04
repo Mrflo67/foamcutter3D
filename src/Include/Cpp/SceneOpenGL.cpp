@@ -22,14 +22,18 @@
 #include "Cube.h"
 #include "Fil.h"
 #include "Simulation.h"
+#include "tinyfiledialogs.h"
 
 #ifndef RESOLUTION_AUTOSET
-#define RESOLUTION_AUTOSET 1
+#define RESOLUTION_AUTOSET 0
 #endif
 #include "ImGui_Menu_Windows.h"
 
+//#include "Mesh.h"
+#include "Model.h"
+#include "Cutting.h"
 
-#define BACKGROUND_COLOR 0.9f, 0.9f, 0.9f
+#define BACKGROUND_COLOR 1.0f, 1.0f, 1.0f
 
 #define LARGEUR_CUBE 100.0f
 #define HAUTEUR_CUBE 100.0f
@@ -52,26 +56,13 @@
 
 
 SceneOpenGL::SceneOpenGL(std::string windowTitle, int width, int height):
-m_windowTitle(windowTitle), m_window(NULL)
+m_windowTitle(windowTitle), m_window(NULL),
+m_gui(), m_simu()
 {
-	Simulation simu;
-	m_simu = simu;
-
-	ImguiMenuWindow gui;
-	m_gui = gui;
-
-	if (RESOLUTION_AUTOSET)
-	{
-		m_gui.getScreenResolution();
-		m_windowWidth = info.WINDOW_WIDTH;
-		m_windowHeight = info.WINDOW_HEIGHT;
-	}
-	else
-	{
-		m_windowWidth = 1280;
-		m_windowHeight = 720;
-	}
-
+	
+	m_windowWidth = 1280;
+	m_windowHeight = 720;
+	
 	m_ratio = (float)m_windowWidth / m_windowHeight;
 }
 
@@ -83,7 +74,6 @@ SceneOpenGL::~SceneOpenGL()
 {
 	
 }
-
 
 void SceneOpenGL::mainLoop()
 {
@@ -109,11 +99,23 @@ void SceneOpenGL::mainLoop()
 	float zoomDefault = 1.0f;
 	float zoomFactor = zoomDefault;
 
+	std::string objectPath;
+	
+	const char * objPath = tinyfd_openFileDialog("Choisir objet à charger", "",0, NULL, NULL,0);
+	if (objPath != NULL)
+		objectPath = objPath;
+	else
+		objectPath = "";
 
+	
+	
 	Cube base(ecartCubeFil*2, -1.0f, ECART_MOTEURS_FIL, VERTEX_SHADER_BASE_PATH, FRAGMENT_SHADER_BASE_PATH);
 	Cube cube(tCubeX, tCubeY, tCubeZ, VERTEX_SHADER_CUBE_PATH, FRAGMENT_SHADER_CUBE_PATH);
 	Fil fil(ecartCubeFil, hauteurFilOrigine, ecartMoteursFil, VERTEX_SHADER_FIL_PATH, FRAGMENT_SHADER_FIL_PATH);
-	
+
+	std::cout << "Ouverture de l'objet 3D..." << std::endl;
+	Model test(objectPath);
+	Shader shader(VERTEX_SHADER_BASE_PATH, FRAGMENT_SHADER_BASE_PATH);
 	m_simu.BindObjects(&cube, &fil);
 
 	/* MATRIX */
@@ -147,9 +149,11 @@ void SceneOpenGL::mainLoop()
 	float vitesse = 1.0f;
 	
 	int etatSimu = 2;//imgui
+	
+	
 
-	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
 	do {
+		
 		//adjust ratio when the window is resized by the user
 		glfwGetWindowSize(m_window, &m_windowWidth, &m_windowHeight);
 		
@@ -157,11 +161,15 @@ void SceneOpenGL::mainLoop()
 
 		info.WINDOW_HEIGHT = m_windowHeight;
 		info.WINDOW_WIDTH = m_windowWidth;
-		
+
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
 		ImGui_ImplGlfwGL3_NewFrame();
 
+		zoomFactor += ImGui::GetIO().MouseWheel * 0.1f;
+		
+		if (zoomFactor < 0.4f)
+			zoomFactor = 0.4f;
 
 		glm::mat4 saveModelCube = ModelCube;
 		glm::mat4 saveModelBase = ModelBase;
@@ -176,10 +184,8 @@ void SceneOpenGL::mainLoop()
 		{
 			etatSimu = 0;
 		}
-
-		ModelCube = glm::rotate(ModelCube, cube.getRotationAngle(), glm::vec3(0.0, 1.0, 0.0));
-
 		m_gui.axisPos(m_simu);
+
 
 		glm::mat4 Projection = glm::perspective(glm::radians(50.0f / zoomFactor), m_ratio, 0.1f, 3000.0f);
 
@@ -192,10 +198,14 @@ void SceneOpenGL::mainLoop()
 		mvpBase = Projection * View * ModelBase;
 		mvpFil = Projection * View * ModelFil;
 
+	
 		//draw 3D objects
+		
 		base.afficher(mvpBase);
 		fil.afficher(mvpFil);
-		cube.afficher(mvpCube);
+		//cube.afficher(mvpCube);
+
+		test.Draw(shader, mvpBase);
 		
 		ModelCube = saveModelCube;
 		ModelBase = saveModelBase;
@@ -285,14 +295,21 @@ void SceneOpenGL::mainLoop()
 			{
 				camPos = glm::vec3(-1000.0f, HAUTEUR_CUBE/2, 0.1f);
 			}
+			if (ImGui::Button("Zoom par defaut"))
+			{
+				zoomFactor = zoomDefault;
+			}
+			ImGui::SameLine();
+			ImGui::Text("x%.1f", zoomFactor);
+
 
 			ImGui::SliderFloat("CamPos X", &camPos.x, -1000.0f, 1000.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("CamPos Y", &camPos.y, -1000.0f, 1000.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("CamPos Z", &camPos.z, -1000.0f, 1000.0f, "%.3f", 1.0f);
-			ImGui::Separator();
-			ImGui::SliderFloat("Zoom", &zoomFactor, 0.5f, 8.0f, "x %.1f", 1.0f);
+			
 		}ImGui::End();
 
+				
 
 		/* Display the menu bar at the top of the window */
 		m_gui.AppMainMenuBar(m_simu);
@@ -319,6 +336,7 @@ void SceneOpenGL::mainLoop()
 }
 
 
+
 bool SceneOpenGL::initWindow()
 {
 	glewExperimental = true; // Needed in core profile
@@ -333,8 +351,8 @@ bool SceneOpenGL::initWindow()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	
 #ifdef _WIN32
-	if (RESOLUTION_AUTOSET)
-		glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
+	
+		//glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 #endif
 
 	glfwWindowHint(GLFW_REFRESH_RATE, 60); //fullscreen only
@@ -354,20 +372,25 @@ bool SceneOpenGL::initWindow()
 		return false;
 	}
 
-	glfwMakeContextCurrent(m_window); // Initialize GLEW
+	glfwMakeContextCurrent(m_window);
+
 	glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
+	
+
+	//glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE); //enable keyboard capture
+	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); //enable mouse capture
 	
 	glfwSwapInterval(1); // Enable vsync
 
-	// Dark blue background
-	glClearColor(BACKGROUND_COLOR, 0.0f);
+
+	glClearColor(BACKGROUND_COLOR, 0.0f); //back color
 
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glEnable(GL_MULTISAMPLE); //should be enabled by default by the driver
-	glEnable(GL_LINE_SMOOTH);
+	//glEnable(GL_LINE_SMOOTH);
 
 	return true;
 }

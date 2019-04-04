@@ -10,7 +10,6 @@ private:
 	size_t m_taille;
 
 public:
-	Gcode();
 	Gcode(std::string n);
 	~Gcode();
 

@@ -13,6 +13,7 @@ struct WindowInfo {
 	int WINDOW_HEIGHT;
 	int corner;
 	float DISTANCE;
+	float zoomFactor;
 }; /* Set the size of the window */
 
 struct ImguiCheckBool {

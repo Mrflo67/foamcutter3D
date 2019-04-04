@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
+
 #include "Shader.h"
 
 class Fil
@@ -25,10 +26,10 @@ private:
 	float m_ecartCubeFil;
 	float m_currentPos[4];
 	GLfloat m_vertex[2*3];
-	GLfloat m_color[6];
-	GLuint m_vertexbuffer;
-	GLuint m_colorbuffer;
-	GLuint m_VertexArrayID;
+	GLuint m_indices[2];
+	GLuint VAO;
+	GLuint VBO;
+	GLuint EBO;
 
 	Shader m_shader;
 	

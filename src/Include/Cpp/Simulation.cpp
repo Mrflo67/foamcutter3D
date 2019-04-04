@@ -10,10 +10,6 @@
 #include <sstream>
 #include <string>
 
-#include <glm/fwd.hpp>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #define _X 0
 #define _Y 1
 #define _U 2
@@ -25,7 +21,7 @@
 
 Simulation::Simulation() : m_etat(0), m_absolu(1), m_finCmd(1), m_reset(1),
 m_priseOrigineMachine(0), m_priseOrigineProgramme(0), m_cube(NULL), m_fil(NULL),
-m_vitesseDecoupe(VITESSE_MAX_DECOUPE), m_vitesseSimulation(0), m_gcodeLoaded(0), m_gcode()
+m_vitesseDecoupe(VITESSE_MAX_DECOUPE), m_vitesseSimulation(0), m_gcodeLoaded(0), m_gcode("")
 {
 }
 
@@ -42,6 +38,13 @@ int Simulation::SimulerDecoupe(float vitesse, float framerate)
 
 	if (m_finCmd)
 	{
+
+		if (!m_gcodeLoaded)
+		{
+			m_etat = 0;
+			return 0;
+		}
+
 		m_currentCmd = m_gcode.getlineCommand(m_reset);
 
 		m_priseOrigineMachine = 0;
@@ -190,7 +193,7 @@ int Simulation::ExecuteCmd(float framerate)
 	static float posFin[5] = { 0.0f };
 	static float pos[5] = { 0.0f };
 	float pas = 0.0f;
-	int endCmd = 0.0f;
+	int endCmd = 0;
 	int fini = 0;
 
 	if (m_finCmd)
