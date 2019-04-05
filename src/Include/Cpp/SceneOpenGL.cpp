@@ -31,7 +31,7 @@
 
 //#include "Mesh.h"
 #include "Model.h"
-#include "Cutting.h"
+//#include "Cutting.h"
 
 #define BACKGROUND_COLOR 1.0f, 1.0f, 1.0f
 

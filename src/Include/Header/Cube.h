@@ -27,6 +27,9 @@ private:
 	GLfloat m_vertex[3*8];
 	GLuint m_indices[12 * 3];
 	
+
+	
+
 	GLuint VBO;
 	GLuint VAO;
 	GLuint EBO;

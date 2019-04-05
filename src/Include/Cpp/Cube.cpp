@@ -16,7 +16,6 @@ Cube::Cube( float l, float h, float L,
 	l /= 2;
 	L /= 2;
 
-
 	// An array of 3 vectors which represents 3 vertices
 	GLfloat vertex_data[] = {
 		l, h, L,     //0 top right //coins face avant
@@ -31,6 +30,8 @@ Cube::Cube( float l, float h, float L,
 
 		
 	};
+
+	
 
 	GLuint indices_data[] =
 	{
@@ -47,6 +48,7 @@ Cube::Cube( float l, float h, float L,
 		5, 4, 6, // arriere
 		4, 6, 7
 	};
+
 
 	for (int i = 0; i < sizeof(m_vertex) / sizeof(float); i++)
 	{
