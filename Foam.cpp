@@ -59,6 +59,21 @@ Foam::Foam(float l, float h, float L, float r) :
 
 }
 
+void Foam::Draw(Shader & shader, glm::mat4 &mvpMatrix)
+{
+	glUseProgram(shader.getProgramID());
+
+
+	GLuint MatrixID = glGetUniformLocation(shader.getProgramID(), "MVP");
+	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
+
+
+
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
 Foam::~Foam()
 {
 }

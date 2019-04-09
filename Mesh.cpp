@@ -40,9 +40,15 @@ Mesh::Mesh()
 	m_vertices.push_back(v0);
 	m_vertices.push_back(v0);
 	m_vertices.push_back(v0);
+	m_vertices.push_back(v0);
+	m_vertices.push_back(v0);
+	m_vertices.push_back(v0);
 	m_indices.push_back(0);
-	m_indices.push_back(1);
-	m_indices.push_back(2);
+	m_indices.push_back(0);
+	m_indices.push_back(0);
+	m_indices.push_back(0);
+	m_indices.push_back(0);
+	m_indices.push_back(0);
 	VBOsizeInit = sizeof(float) * 3 * m_vertices.size()*1024;
 	EBOsizeInit = sizeof(unsigned int) * m_indices.size()*1024;
 
@@ -119,26 +125,23 @@ Mesh::~Mesh()
 {
 }
 
-void Mesh::Draw(Shader const& shader, glm::mat4 &mvpMatrix)
+void Mesh::Draw(Shader const& shader, glm::mat4 &mvpMatrix, int triangle)
 {
-	
-	//std::cout << "new"<<m_vertices.size() * sizeof(float) * 3 << std::endl;
-	//std::cout <<"init"<< VBOsizeInit << std::endl;
-	
+	if (m_vertices.size() > 0)
+	{
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferSubData(GL_ARRAY_BUFFER,
 			0,
 			m_vertices.size() * sizeof(float) * 3,
 			&m_vertices[0]);
 
-
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,
 			0,
 			m_indices.size() * sizeof(unsigned int),
 			&m_indices[0]);
+	}
 	
-		
 	//shader.load();
 	glUseProgram(shader.getProgramID());
 	
@@ -147,10 +150,14 @@ void Mesh::Draw(Shader const& shader, glm::mat4 &mvpMatrix)
 	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
 	
 	
-
 	glBindVertexArray(VAO);
+	
+	if(triangle)
 	glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
+	else
+	glDrawElements(GL_LINES, m_indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+
 }
 
 void Mesh::setupMesh()

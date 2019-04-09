@@ -31,12 +31,12 @@ public:
 		std::vector<unsigned int> indices);
 	~Mesh();
 	/* Functions */
-	void Draw(Shader const& shader, glm::mat4 &mvpMatrix);
+	void Draw(Shader const& shader, glm::mat4 &mvpMatrix, int triangle);
 	void setupCutter();
 	void cut();
 
 
-private:
+protected:
 	/* Render data*/
 	unsigned int VBO, EBO;
 	GLsizeiptr VBOsizeInit, EBOsizeInit;

@@ -1,18 +1,20 @@
 #pragma once
 
-#include <GL/glew.h>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Shader.h"
 #include "Mesh.h"
-#include <array>;
+#include <array>
+
 class Foam :
 	public Mesh
 {
 public:
 	Foam(float l, float h, float L, float r=0.0f);
 	~Foam();
+
+	void Draw(Shader & shader, glm::mat4 &mvpMatrix);
 
 	float getRotationDeg();
 	float getRotationRad();
