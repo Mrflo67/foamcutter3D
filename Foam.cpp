@@ -41,37 +41,16 @@ Foam::Foam(float l, float h, float L, float r) :
 		5, 7, 0
 	};
 
-	m_indices.clear();
-	m_vertices.clear();
+	Mesh foamMesh(vertexPos, indicesNum, 24, 36);
 
-	for (int i = 0; i < sizeof(vertexPos) / sizeof(float); i+=3)
-	{
-		std::array<float, 3> vertex = { vertexPos[i], vertexPos[i+1], vertexPos[i+2] };
-		m_vertices.push_back(vertex);
-	}
+	mesh = foamMesh;
 
-	for (int i = 0; i < sizeof(indicesNum) / sizeof(unsigned int); ++i)
-	{
-		m_indices.push_back(indicesNum[i]);
-	}
-
-	setupMesh();
-
+	std::cout << "BONJOUR"<<mesh.m_indices.size();
 }
 
 void Foam::Draw(Shader & shader, glm::mat4 &mvpMatrix)
 {
-	glUseProgram(shader.getProgramID());
-
-
-	GLuint MatrixID = glGetUniformLocation(shader.getProgramID(), "MVP");
-	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
-
-
-
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+	mesh.Draw(shader, mvpMatrix, 1);
 }
 
 Foam::~Foam()
@@ -90,7 +69,7 @@ float Foam::getRotationRad()
 
 std::array<float, 3> Foam::getVertexCoords(unsigned int n)
 {
-	return m_vertices[n];
+	return mesh.m_vertices[n];
 }
 
 

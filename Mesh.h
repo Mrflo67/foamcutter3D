@@ -29,6 +29,8 @@ public:
 	Mesh();
 	Mesh(std::vector<std::array<float, 3>> vertices,
 		std::vector<unsigned int> indices);
+	Mesh(GLfloat vertices[], GLuint indices[],
+		size_t sV, size_t sI);
 	~Mesh();
 	/* Functions */
 	void Draw(Shader const& shader, glm::mat4 &mvpMatrix, int triangle);
@@ -44,6 +46,7 @@ protected:
 protected:
 	/* Functions */
 	void setupMesh();
+	void setupEmptyMesh();
 
 };
 

@@ -55,7 +55,7 @@ Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil,
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// Give our vertices to OpenGL.
+
 	glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertex), m_vertex, GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -64,7 +64,7 @@ Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil,
 		&m_indices[0], GL_STATIC_DRAW);
 
 	// 1st attribute buffer : vertices
-
+	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(
 		0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 		3,                  // size
@@ -73,7 +73,7 @@ Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil,
 		0,                  // stride
 		(void*)0            // array buffer offset
 	);
-	glEnableVertexAttribArray(0);
+
 }
 
 
@@ -86,8 +86,6 @@ Fil::~Fil()
 void Fil::majPos(float newPos_X, float newPos_Y, float newPos_U, float newPos_V)
 {
 	unsigned int offset = trajectory.m_vertices.size();
-	
-
 	
 	GLfloat newVertexData[] = {
 		-m_ecartCubeFil + newPos_X, newPos_Y + m_hauteurOrigine, m_ecartMoteurs / 2,
@@ -146,7 +144,6 @@ void Fil::setOriginPos(float X, float Y, float U, float V)
 void Fil::afficher(glm::mat4 &mvpMatrix)
 {
 
-	// Use our shader
 	glUseProgram(m_shader.getProgramID());
 
 	GLuint MatrixID = glGetUniformLocation(m_shader.getProgramID(), "MVP");

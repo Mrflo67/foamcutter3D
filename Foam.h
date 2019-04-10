@@ -7,8 +7,7 @@
 #include "Mesh.h"
 #include <array>
 
-class Foam :
-	public Mesh
+class Foam
 {
 public:
 	Foam(float l, float h, float L, float r=0.0f);
@@ -20,7 +19,8 @@ public:
 	float getRotationRad();
 	
 	std::array<float, 3> getVertexCoords(unsigned int n);
-	
+	Mesh mesh;
+
 private :
 
 	const float m_longueur;

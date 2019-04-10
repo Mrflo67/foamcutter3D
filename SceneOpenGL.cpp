@@ -93,8 +93,8 @@ void SceneOpenGL::mainLoop()
 
 	
 	//create 3D objects 
-	Cube base(ecartCubeFil*2, -1.0f, ECART_MOTEURS_FIL, VERTEX_SHADER_BASE_PATH, FRAGMENT_SHADER_BASE_PATH);
-	Cube cube(tCubeX, tCubeY, tCubeZ, VERTEX_SHADER_CUBE_PATH, FRAGMENT_SHADER_CUBE_PATH);
+	//Cube base(ecartCubeFil*2, -1.0f, ECART_MOTEURS_FIL, VERTEX_SHADER_BASE_PATH, FRAGMENT_SHADER_BASE_PATH);
+	//Cube cube(tCubeX, tCubeY, tCubeZ, VERTEX_SHADER_CUBE_PATH, FRAGMENT_SHADER_CUBE_PATH);
 	Fil fil(ecartCubeFil, hauteurFilOrigine, ecartMoteursFil, VERTEX_SHADER_FIL_PATH, FRAGMENT_SHADER_FIL_PATH);
 	
 
@@ -111,7 +111,7 @@ void SceneOpenGL::mainLoop()
 	
 	// Projection matrix : Field of View, ratio, display range : 0.1 unit <-> 100 units
 
-	glm::mat4 Projection = glm::perspective(glm::radians(50.0f / zoomFactor), m_ratio , 600.0f, 1500.0f);
+	glm::mat4 Projection = glm::perspective(glm::radians(50.0f / zoomFactor), m_ratio , 200.0f, 1500.0f);
 	//glm::mat4 ProjectionDefault = Projection;
 	glm::mat4 View  = glm::lookAt(
 		glm::vec3(camPos), // Camera is at (4,3,3), in World Space
@@ -179,7 +179,7 @@ void SceneOpenGL::mainLoop()
 		m_gui.axisPos(m_simu);
 
 
-		glm::mat4 Projection = glm::perspective(glm::radians(50.0f / zoomFactor), m_ratio, 600.0f, 1500.0f);
+		glm::mat4 Projection = glm::perspective(glm::radians(50.0f / zoomFactor), m_ratio, 200.0f, 1500.0f);
 
 		View = glm::lookAt(
 			glm::vec3(camPos), 
@@ -199,7 +199,8 @@ void SceneOpenGL::mainLoop()
 		if (draw)
 			cutSurface.Draw(cutShader, mvpBase, 1);
 		fil.afficher(mvpFil);
-		foam.Draw(foamShader, mvpCube);
+
+		foam.mesh.Draw(foamShader, mvpBase, 1);
 		
 		ModelCube = saveModelCube;
 		ModelBase = saveModelBase;
