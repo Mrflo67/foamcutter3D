@@ -19,6 +19,7 @@ public:
 	void setOriginPos(float, float, float, float);
 	void getCurrentPos(float pos[]);
 	void getOriginPos(float pos[]);
+	void getInterFoamPos(float pos[4]);
 
 	const float posZ_XY;
 	const float posZ_UV;
@@ -29,6 +30,8 @@ private:
 	float m_hauteurOrigine;
 	float m_ecartMoteurs;
 	float m_ecartCubeFil;
+	//indices significations: 
+	//0=X, 1=Y, 2=U, 3=V
 	float m_currentPos[4];
 
 	GLfloat m_vertex[2*3];

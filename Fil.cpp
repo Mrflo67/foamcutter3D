@@ -99,13 +99,15 @@ void Fil::majPos(float newPos_X, float newPos_Y, float newPos_U, float newPos_V)
 
 	trajectory.m_vertices.push_back(v0);
 	
+	if (trajectory.m_vertices.size() >= 4)
+	{
+		trajectory.m_indices.push_back(offset - 1);
+		trajectory.m_indices.push_back(offset + 1);
 
-	trajectory.m_indices.push_back(offset-1);
-	trajectory.m_indices.push_back(offset+1);
+		trajectory.m_indices.push_back(offset);
+		trajectory.m_indices.push_back(offset - 2);
+	}
 	
-	trajectory.m_indices.push_back(offset);
-	trajectory.m_indices.push_back(offset-2);
-
 
 	m_currentPos[0] = newPos_X;
 	m_currentPos[1] = newPos_Y;
@@ -136,6 +138,86 @@ void Fil::getOriginPos(float pos[])
 	pos[3] = pos[0];
 }
 
+void Fil::getInterFoamPos(float pos[4])
+{
+	//1. Computing vertical position
+
+	float Vangle; //vertical angle between A(X,Y) and B(U,V)
+	//A and B : near and far wire ends;
+	float posAX = posZ_XY;
+	float posAY = m_currentPos[1];
+	float posBX = posZ_UV;
+	float posBY = m_currentPos[3];
+	//F1 and F2 = foam wideness pos X
+	float largeurFoam = 100.0f; //todo
+	float xF1 = largeurFoam/2;
+	float posYInter1, posYInter2;
+
+	if (posAY > posBY)
+	{
+		Vangle = glm::atan(abs((posAY - posBY) / (posAX - posBX)));
+		posYInter1 = posAY - glm::tan(Vangle) * (posAX - xF1);
+		posYInter2 = posAY - glm::tan(Vangle) * (posAX + xF1);
+	}
+	else if (posBY > posAY)
+	{
+		Vangle = glm::atan((posBY - posAY) / (posAX - posBX));
+		Vangle = glm::atan(abs((posAY - posBY) / (posAX - posBX)));
+		posYInter2 = posBY - glm::tan(Vangle) * (posAX - xF1);
+		posYInter1 = posBY - glm::tan(Vangle) * (posAX + xF1);
+
+	}
+	else
+	{
+		Vangle = 0;
+		posYInter1 = posAY;
+		posYInter2 = posBY;
+	}
+
+	pos[1] = posYInter1;
+	pos[3] = posYInter2;
+
+
+
+	//2. horizontal position
+
+
+	float Hangle;
+	posAY = *m_currentPos;
+	posBY = m_currentPos[2];
+	posAX = posZ_XY;
+	posBX = posZ_UV;
+	float longueurFoam = 100.0f;
+	xF1 = longueurFoam / 2;
+	float posXInter1, posXInter2;
+
+
+	if (posAY > posBY)
+	{
+		Hangle = glm::atan(abs((posAY - posBY) / (posAX - posBX)));
+		posXInter1 = posAY - glm::tan(Hangle) * (posAX - xF1);
+		posXInter2 = posAY - glm::tan(Hangle) * (posAX + xF1);
+	}
+	else if (posAY < posBY)
+	{
+		Hangle = glm::atan(abs((posAY - posBY) / (posAX - posBX)));
+		posXInter2 = posBY - glm::tan(Hangle) * (posAX - xF1);
+		posXInter1 = posBY - glm::tan(Hangle) * (posAX + xF1);
+		
+	}
+	else
+	{
+		Vangle = 0;
+		posXInter1 = posAY;
+		posXInter2 = posBY;
+	}
+
+
+	pos[0] = posXInter1;
+	pos[2] = posXInter2;
+	
+}
+
 void Fil::setOriginPos(float X, float Y, float U, float V)
 {}
 
@@ -151,7 +233,7 @@ void Fil::afficher(glm::mat4 &mvpMatrix)
 
 
 	glBindVertexArray(VAO);
-	glDrawElements(GL_LINES, sizeof(m_indices), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
 	trajectory.Draw(m_shader, mvpMatrix, 0);

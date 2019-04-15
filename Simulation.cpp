@@ -133,13 +133,13 @@ int Simulation::NextCmd()
 			switch ((int)cmdValue)
 			{
 			case 0: break;
-			case 1: break;
+			case 1: break; 
 			case 2: Arreter(); m_reset = 1;
-				m_cutSurface->setupCutter(); 
-				m_cutSurface->cut();
+				//m_cutSurface->cut();
+			
 				break;
-			case 3: break;
-			case 5: break;
+			case 3: break; 
+			case 5: break; 
 
 			case 45: /*todo*/break;
 			case 46: /*todo*/break;
@@ -208,15 +208,20 @@ int Simulation::MoveObjects(float framerate)
 	float pas = 0.0f;
 	int endCmd = 0;
 	int fini = 0;
-	static std::array<float, 3> v0{ {0.0f, 0.0f, 100} }; //debut XY
-	static std::array<float, 3> v1 = { {0.0f, 0.0f, -100.0f} }; //debut UV
+	static std::array<float, 3> v0{ {0.0f, 0.0f, 50} }; //debut XY
+	static std::array<float, 3> v1 = { {0.0f, 0.0f, -50.0f} }; //debut UV
 	static std::array<float, 3> v2 = v0; //fin XY
 	static std::array<float, 3> v3 = v1; //fin UV
 
-	if (m_finCmd)
+	float posSurface[4];
+
+	if (1==1)
 	{
+
+		m_fil->getInterFoamPos(pos);
+
+
 		//vertices positions array for the cutter surface 
-		
 		m_fil->getCurrentPos(posDebut);
 		posDebut[_B] = 0;
 
@@ -225,12 +230,17 @@ int Simulation::MoveObjects(float framerate)
 			posFin[i] = m_optionsCmd[i];
 		}
 
-		v0[0] = posDebut[_X]-400.0f;
-		v0[1] = posDebut[_Y];
-		v1[0] = posDebut[_U]-400.0f;
-		v1[1] = posDebut[_V];
+	
+
+		m_fil->getInterFoamPos(posSurface);
+
+		v0[0] = posSurface[_X]-400.0f;
+		v0[1] = posSurface[_Y];
+		v1[0] = posSurface[_U]-400.0f;
+		v1[1] = posSurface[_V];
 
 	}
+
 
 	m_fil->getCurrentPos(pos);
 	pos[_B] = m_cube->getRotationDeg();
@@ -275,31 +285,37 @@ int Simulation::MoveObjects(float framerate)
 	if (fini == 5)
 	{
 		endCmd = 1;
-		v2[0] = pos[_X] - 400.0f;
-		v2[1] = pos[_Y];
-		v3[0] = pos[_U] - 400.0f;
-		v3[1] = pos[_V];
-		unsigned int offset = m_cutSurface->m_vertices.size();
-
-		m_cutSurface->m_vertices.push_back(v0);
-		m_cutSurface->m_vertices.push_back(v1);
-		m_cutSurface->m_vertices.push_back(v2);
-		m_cutSurface->m_vertices.push_back(v3);
 	
-		m_cutSurface->m_indices.push_back(offset);
-		m_cutSurface->m_indices.push_back(offset + 2);
-		m_cutSurface->m_indices.push_back(offset + 1);
-		m_cutSurface->m_indices.push_back(offset + 1);
-		m_cutSurface->m_indices.push_back(offset + 2);
-		m_cutSurface->m_indices.push_back(offset + 3);
+		
 
+		//return endCmd;
 	}
 	
+	m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
+	m_fil->getInterFoamPos(posSurface);
 
+
+	v2[0] = posSurface[_X] - 400.0f;
+	v2[1] = posSurface[_Y];
+	v3[0] = posSurface[_U] - 400.0f;
+	v3[1] = posSurface[_V];
+	unsigned int offset = m_cutSurface->m_vertices.size();
+
+	m_cutSurface->m_vertices.push_back(v0);
+	m_cutSurface->m_vertices.push_back(v1);
+	m_cutSurface->m_vertices.push_back(v2);
+	m_cutSurface->m_vertices.push_back(v3);
+
+	m_cutSurface->m_indices.push_back(offset);
+	m_cutSurface->m_indices.push_back(offset + 2);
+	m_cutSurface->m_indices.push_back(offset + 1);
+	m_cutSurface->m_indices.push_back(offset + 1);
+	m_cutSurface->m_indices.push_back(offset + 2);
+	m_cutSurface->m_indices.push_back(offset + 3);
 	//m_cube->rotationY(pos[_B]);
 
-	m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
-	
+	//m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
+
 	
 
 	return endCmd;
@@ -315,7 +331,7 @@ void Simulation::BindObjects(Foam &cube, Fil &fil, Mesh &cutSurface)
 	m_cube = &cube;
 	m_fil = &fil;
 	m_cutSurface = &cutSurface;
-
+	//m_cutSurface->setupCutter();
 }
 
 void Simulation::Demarrer()
@@ -354,18 +370,8 @@ int Simulation::Init()
 	{
 		m_cutSurface->m_indices.clear();
 		m_cutSurface->m_vertices.clear();
-		std::array<float, 3> v0{ {0.0f, 0.0f, 0.0f} };
-		m_cutSurface->m_vertices.push_back(v0);
-		m_cutSurface->m_vertices.push_back(v0);
-		m_cutSurface->m_indices.push_back(0);
-		m_cutSurface->m_indices.push_back(0);
-		m_cutSurface->m_indices.push_back(0);
-		m_cutSurface->m_indices.push_back(0);
-		m_cutSurface->m_indices.push_back(0);
-		m_cutSurface->m_indices.push_back(0);
 		
 	}
-	
 
 	return 1;
 }
