@@ -21,6 +21,7 @@ public:
 	int SimulerDecoupe(float vitesse, float framerate);
 	bool ChargerGcode(std::string filename);
 	std::string getCurrentCmd();
+	int getCurrentLineNb();
 
 	Foam *m_cube;
 	Fil *m_fil;
@@ -40,7 +41,9 @@ private:
 	float m_vitesseDecoupe;
 	float m_optionsCmd[5]; // [5] = {X, Y, U, V, B}
 	bool m_reset;
+	bool m_moveCmd;
 	std::string m_currentCmd;
+	int m_currentLineNb;
 	
 	int NextCmd();
 	int MoveObjects(float framerate);

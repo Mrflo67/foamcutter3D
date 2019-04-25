@@ -23,12 +23,10 @@
 #define VITESSE_MAX_SIMULATION 10.0f
 
 
-
-
-
 Simulation::Simulation() : m_etat(0), m_absolu(1), m_finCmd(1), m_reset(1),
 m_priseOrigineMachine(0), m_priseOrigineProgramme(0), m_cube(NULL), m_fil(NULL), m_cutSurface(NULL),
-m_vitesseDecoupe(VITESSE_MAX_DECOUPE), m_vitesseSimulation(0), m_gcodeLoaded(0), m_gcode("")
+m_vitesseDecoupe(VITESSE_MAX_DECOUPE), m_vitesseSimulation(0), m_gcodeLoaded(0), m_gcode(""),
+m_currentCmd(""), m_currentLineNb(0), m_moveCmd(false)
 {
 }
 
@@ -39,13 +37,10 @@ Simulation::~Simulation()
 
 int Simulation::SimulerDecoupe(float vitesse, float framerate)
 {
-
 	m_vitesseSimulation = vitesse;
 	
-
 	if (m_finCmd)
 	{
-
 		if (!m_gcodeLoaded)
 		{
 			m_etat = 0;
@@ -53,22 +48,26 @@ int Simulation::SimulerDecoupe(float vitesse, float framerate)
 		}
 
 		m_currentCmd = m_gcode.getlineCommand(m_reset);
+		m_currentLineNb++;
 
 		m_priseOrigineMachine = 0;
 		m_priseOrigineProgramme = 0;
 
 		if (m_reset)
 		{
+			m_currentLineNb = 1;
 			m_reset = false;
 		}
-			
 
 		NextCmd();
 	}
 
 	if (m_vitesseSimulation > 0)
 	{
-		m_finCmd = MoveObjects(framerate);		
+		if (m_moveCmd)
+			m_finCmd = MoveObjects(framerate);
+		else
+			m_finCmd = 1;
 	}
 	else
 	{
@@ -81,6 +80,7 @@ int Simulation::SimulerDecoupe(float vitesse, float framerate)
 
 int Simulation::NextCmd()
 {
+	m_moveCmd = false;
 	std::stringstream ssCmd;
 	std::string sCmd("");
 	char cmdLetter='G';
@@ -135,8 +135,8 @@ int Simulation::NextCmd()
 			case 0: break;
 			case 1: break; 
 			case 2: Arreter(); m_reset = 1;
-				//m_cutSurface->cut();
-			
+				m_cutSurface->genVertexNormals();
+				m_cutSurface->load = 1;
 				break;
 			case 3: break; 
 			case 5: break; 
@@ -149,9 +149,8 @@ int Simulation::NextCmd()
 			}
 		}break;
 
-		case 'P': break; //todo
-		case 'S': break; //todo
-
+		case 'P': break; 
+		case 'S': break; 
 		case 'X': axisID = _X; break;
 		case 'Y': axisID = _Y; break;
 		case 'U': axisID = _U; break;
@@ -190,6 +189,8 @@ int Simulation::NextCmd()
 					m_optionsCmd[axisID] = currentPos[axisID] + cmdValue;	
 				}
 			}
+
+			m_moveCmd = true;
 		}
 		sCmd.clear();
 	}
@@ -201,24 +202,24 @@ int Simulation::NextCmd()
 
 int Simulation::MoveObjects(float framerate)
 {
-
 	static float posDebut[5] = { 0.0f };
 	static float posFin[5] = { 0.0f };
 	static float pos[5] = { 0.0f };
 	float pas = 0.0f;
 	int endCmd = 0;
 	int fini = 0;
-	static std::array<float, 3> v0{ {0.0f, 0.0f, 50} }; //debut XY
-	static std::array<float, 3> v1 = { {0.0f, 0.0f, -50.0f} }; //debut UV
+	static std::array<float, 3> v0{ {0.0f, 0.0f, m_cube->getLargeur() / 2} }; //debut XY
+	static std::array<float, 3> v1 = { {0.0f, 0.0f, - (m_cube->getLargeur() / 2) } }; //debut UV
 	static std::array<float, 3> v2 = v0; //fin XY
 	static std::array<float, 3> v3 = v1; //fin UV
+	static int ecartCentre = m_fil->getEcartX();
 
 	float posSurface[4];
 
-	if (1==1)
+	if (m_finCmd)
 	{
 
-		m_fil->getInterFoamPos(pos);
+		m_fil->getInterFoamPos(pos, m_cube->getLargeur());
 
 
 		//vertices positions array for the cutter surface 
@@ -230,14 +231,14 @@ int Simulation::MoveObjects(float framerate)
 			posFin[i] = m_optionsCmd[i];
 		}
 
-	
+		m_fil->getInterFoamPos(posSurface, m_cube->getLargeur());
 
-		m_fil->getInterFoamPos(posSurface);
-
-		v0[0] = posSurface[_X]-400.0f;
+		v0[0] = posSurface[_X] - ecartCentre;
 		v0[1] = posSurface[_Y];
-		v1[0] = posSurface[_U]-400.0f;
+		v0[2] = m_cube->getLargeur() / 2;
+		v1[0] = posSurface[_U]- ecartCentre;
 		v1[1] = posSurface[_V];
+		v1[2] = - (m_cube->getLargeur() / 2);
 
 	}
 
@@ -245,18 +246,14 @@ int Simulation::MoveObjects(float framerate)
 	m_fil->getCurrentPos(pos);
 	pos[_B] = m_cube->getRotationDeg();
 
-	//fini = 0;
+	fini = 0;
 	
 
 	for (int i = _X; i < _B+1; i++)
 	{
-		
 		pas = ((m_vitesseSimulation > VITESSE_MAX_SIMULATION) * fabs(posFin[i] - posDebut[i])) + 
 			m_vitesseSimulation *
 			(m_vitesseDecoupe / VITESSE_MAX_DECOUPE) * (VITESSE_MAX_DECOUPE / 60.0f / framerate);
-
-		
-
 
 		if (posDebut[i] < posFin[i])
 		{
@@ -286,36 +283,35 @@ int Simulation::MoveObjects(float framerate)
 	{
 		endCmd = 1;
 	
-		
+		m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
+		m_fil->getInterFoamPos(posSurface, m_cube->getLargeur());
 
-		//return endCmd;
+		v2[0] = posSurface[_X] - ecartCentre;
+		v2[1] = posSurface[_Y];
+		v2[2] = v0[2];
+		v3[0] = posSurface[_U] - ecartCentre;
+		v3[1] = posSurface[_V];
+		v3[2] = v1[2];
+		unsigned int offset = m_cutSurface->m_vertices.size();
+
+		m_cutSurface->m_vertices.push_back(v0);
+		m_cutSurface->m_vertices.push_back(v1);
+		m_cutSurface->m_vertices.push_back(v2);
+		m_cutSurface->m_vertices.push_back(v3);
+
+		m_cutSurface->m_indices.push_back(offset);
+		m_cutSurface->m_indices.push_back(offset + 2);
+		m_cutSurface->m_indices.push_back(offset + 1);
+		m_cutSurface->m_indices.push_back(offset + 1);
+		m_cutSurface->m_indices.push_back(offset + 2);
+		m_cutSurface->m_indices.push_back(offset + 3);
+
+		return endCmd;
 	}
 	
-	m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
-	m_fil->getInterFoamPos(posSurface);
-
-
-	v2[0] = posSurface[_X] - 400.0f;
-	v2[1] = posSurface[_Y];
-	v3[0] = posSurface[_U] - 400.0f;
-	v3[1] = posSurface[_V];
-	unsigned int offset = m_cutSurface->m_vertices.size();
-
-	m_cutSurface->m_vertices.push_back(v0);
-	m_cutSurface->m_vertices.push_back(v1);
-	m_cutSurface->m_vertices.push_back(v2);
-	m_cutSurface->m_vertices.push_back(v3);
-
-	m_cutSurface->m_indices.push_back(offset);
-	m_cutSurface->m_indices.push_back(offset + 2);
-	m_cutSurface->m_indices.push_back(offset + 1);
-	m_cutSurface->m_indices.push_back(offset + 1);
-	m_cutSurface->m_indices.push_back(offset + 2);
-	m_cutSurface->m_indices.push_back(offset + 3);
 	//m_cube->rotationY(pos[_B]);
 
-	//m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
-
+	m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
 	
 
 	return endCmd;
@@ -331,7 +327,6 @@ void Simulation::BindObjects(Foam &cube, Fil &fil, Mesh &cutSurface)
 	m_cube = &cube;
 	m_fil = &fil;
 	m_cutSurface = &cutSurface;
-	//m_cutSurface->setupCutter();
 }
 
 void Simulation::Demarrer()
@@ -349,14 +344,19 @@ std::string Simulation::getCurrentCmd()
 	return m_currentCmd;
 }
 
+int Simulation::getCurrentLineNb()
+{
+	return m_currentLineNb;
+}
+
 int Simulation::Init()
 {
-
 	m_reset = true; 
 	m_finCmd = 1;
 	m_absolu = 1;
 	m_etat = 0;
 	m_currentCmd.clear();
+	m_currentLineNb = 0;
 
 	if (m_cube != NULL && m_fil != NULL)
 	{
@@ -370,7 +370,7 @@ int Simulation::Init()
 	{
 		m_cutSurface->m_indices.clear();
 		m_cutSurface->m_vertices.clear();
-		
+		m_cutSurface->m_normals.clear();
 	}
 
 	return 1;
