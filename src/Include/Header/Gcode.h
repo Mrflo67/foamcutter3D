@@ -5,20 +5,19 @@
 class Gcode
 {
 private:
-	std::string name;
-	std::string commandes;
-	size_t taille;
+	std::string m_name;
+	std::string m_commandes;
+	size_t m_taille;
 
 public:
-	Gcode();
 	Gcode(std::string n);
 	~Gcode();
 
-	void setCommandes(std::string);
 	int isLoaded();
 	size_t getTaille();
 	std::string getName();
 	std::string getlineCommand(bool reset);
+	std::string getCommandes();
 
 };
 

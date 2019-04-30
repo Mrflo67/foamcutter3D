@@ -1,4 +1,4 @@
-#include "GL/glew.h"
+#include <GL/glew.h>
 
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
@@ -6,164 +6,76 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "Cube.h"
-//shaders
-#include "loadShader.hpp"
 
-Cube::Cube( float l, float h, float p) : m_longueur(l), m_hauteur(h), m_profondeur(p)
+#include "Shader.h"
+
+Cube::Cube(float l, float h, float L,
+	std::string const vertexShader, std::string const fragmentShader) :
+	m_shader(vertexShader, fragmentShader)
 {
-	glGenVertexArrays(1, &m_VertexArrayID);
-	glBindVertexArray(m_VertexArrayID);
-
-	m_programID = LoadShaders("shadersCube/CubeVertexShader.txt", "shadersCube/CubeFragmentShader.txt");
-	m_MatrixID = glGetUniformLocation(m_programID, "MVP");
-
+	l /= 2;
+	L /= 2;
 
 	// An array of 3 vectors which represents 3 vertices
 	GLfloat vertex_data[] = {
-	 -m_longueur/2, 0.0f,-m_profondeur/2, // triangle 1 : begin
-	-m_longueur/2, 0.0f, m_profondeur/2,
-	-m_longueur/2, m_hauteur, m_profondeur/2, // triangle 1 : end
-	m_longueur/2, m_hauteur,-m_profondeur/2, // triangle 2 : begin
-	-m_longueur/2,0.0f,-m_profondeur/2,
-	-m_longueur/2, m_hauteur,-m_profondeur/2, // triangle 2 : end
-	m_longueur/2, 0.0f, m_profondeur/2,
-	-m_longueur/2,0.0f,-m_profondeur/2,
-	m_longueur/2, 0.0f,-m_profondeur/2,
-	m_longueur/2, m_hauteur,-m_profondeur/2,
-	m_longueur/2, 0.0f,-m_profondeur/2,
-	-m_longueur/2,0.0f,-m_profondeur/2,
-	-m_longueur/2,0.0f,-m_profondeur/2,
-	-m_longueur/2, m_hauteur, m_profondeur/2,
-	-m_longueur/2, m_hauteur,-m_profondeur/2,
-	m_longueur/2, 0.0f, m_profondeur/2,
-	-m_longueur/2, 0.0f, m_profondeur/2,
-	-m_longueur/2, 0.0f,-m_profondeur/2,
-	-m_longueur/2, m_hauteur, m_profondeur/2,
-	-m_longueur/2, 0.0f, m_profondeur/2,
-	m_longueur/2, 0.0f, m_profondeur/2,
-	m_longueur/2, m_hauteur, m_profondeur/2,
-	m_longueur/2,0.0f,-m_profondeur/2,
-	m_longueur/2, m_hauteur,-m_profondeur/2,
-	m_longueur/2, 0.0f,-m_profondeur/2,
-	m_longueur/2, m_hauteur, m_profondeur/2,
-	m_longueur/2, 0.0f, m_profondeur/2,
-	m_longueur/2, m_hauteur, m_profondeur/2,
-	m_longueur/2, m_hauteur,-m_profondeur/2,
-	-m_longueur/2, m_hauteur,-m_profondeur/2,
-	m_longueur/2, m_hauteur, m_profondeur/2,
-	-m_longueur/2, m_hauteur,-m_profondeur/2,
-	-m_longueur/2, m_hauteur, m_profondeur/2,
-	m_longueur/2, m_hauteur, m_profondeur/2,
-	-m_longueur/2, m_hauteur, m_profondeur/2,
-	m_longueur/2, 0.0f, m_profondeur/2 
-	};
-
-
-	static const GLfloat g_color_buffer_data[] = {
-	0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-	0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-	0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-		0.5f, 0.7f, 0.0f,
-	0.7f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-	0.7f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-	0.7f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
-		0.6f, 0.7f, 0.0f,
+		l, h, L,     //0 top right //coins face avant
+		l, 0.0f, L,  //1 bottom right
+		-l, 0.0f, L, //2 bottom left
+		-l, h, L,    //3 top left
+		
+		-l, h, -L,   //4 top left //coins face arriere
+		-l, 0.0f, -L,//5 bottom left
+		l, 0.0f, -L, //6 bottom right
+		l, h, -L,    //7 top right
 
 	};
 
-	for (int i = 0; i < 12*3*3; i++)
+	
+
+	GLuint indices_data[] =
+	{
+		0, 3, 1, // face avant
+		1, 3, 2,
+		2, 3, 5, // gauche
+		3, 4, 5,
+		5, 2, 6, // dessous
+		6, 2, 1,
+		1, 6, 0, // droite
+		0, 6, 7,
+		7, 4, 3, // dessus
+		3, 0, 7,
+		7, 4, 5, // arriere
+		5, 7, 0
+	};
+
+
+	for (int i = 0; i < sizeof(m_vertex) / sizeof(float); i++)
 	{
 		m_vertex[i] = vertex_data[i];
-		m_color[i] = g_color_buffer_data[i];
+	}
+	for (int i = 0; i < sizeof(m_indices) / sizeof(unsigned int); i++)
+	{
+		m_indices[i] = indices_data[i];
 	}
 
-	
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 
-	
+	glBindVertexArray(VAO);
 
-	
-	// Generate 1 buffer, put the resulting identifier in vertexbuffer
-	glGenBuffers(1, &m_vertexbuffer);
-	// The following commands will talk about our 'vertexbuffer' buffer
-	glBindBuffer(GL_ARRAY_BUFFER, m_vertexbuffer);
-	// Give our vertices to OpenGL.
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertex), m_vertex, GL_STATIC_DRAW);
 
-	
-	glGenBuffers(1, &m_colorbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, m_colorbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_indices),
+		&m_indices[0], GL_STATIC_DRAW);
 
 
-}
-
-
-Cube::~Cube()
-{
-	// Cleanup VBO
-	glDeleteBuffers(1, &m_vertexbuffer);
-	glDeleteBuffers(1, &m_colorbuffer);
-	glDeleteVertexArrays(1, &m_VertexArrayID);
-	glDeleteProgram(m_programID);
-}
-
-
-glm::mat4 Cube::rotationY(float rotationAngle)
-{
-	m_rotationY = rotationAngle;
-	glm::vec3 rotation = glm::vec3(0, m_rotationY, 0);
-	glm::quat cubeQuaternion = glm::quat(rotation);
-
-
-	return glm::mat4_cast(cubeQuaternion);
-}
-
-
-
-void Cube::afficher(glm::mat4 &mvpMatrix)
-{
-	
-
-	// Use our shader
-	glUseProgram(m_programID);
-
-
-	// Send our transformation to the currently bound shader, 
-	// in the "MVP" uniform
-	glUniformMatrix4fv(m_MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
-
-
-	// 1st attribute buffer : vertices
+	// vertices
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, m_vertexbuffer);
 	glVertexAttribPointer(
 		0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 		3,                  // size
@@ -173,22 +85,38 @@ void Cube::afficher(glm::mat4 &mvpMatrix)
 		(void*)0            // array buffer offset
 	);
 
-	// 2nd attribute buffer : colors
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, m_colorbuffer);
-	glVertexAttribPointer(
-		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-		3,                                // size
-		GL_FLOAT,                         // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
-	);
+}
 
+
+Cube::~Cube()
+{
+}
+
+
+void Cube::rotationY(float rotationAngle)
+{
+	m_rotationY = rotationAngle;
+}
+
+float Cube::getRotationAngle()
+{
+	return m_rotationY;
+}
+
+
+void Cube::afficher(glm::mat4 &mvpMatrix)
+{
+	// Use our shader
+	glUseProgram(m_shader.getProgramID());
+
+	GLuint MatrixID = glGetUniformLocation(m_shader.getProgramID(), "MVP");
+	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
+
+	glBindVertexArray(VAO);
 	
-
 	// Draw the triangle !
-	glDrawArrays(GL_TRIANGLES, 0, 12*3);//sizeof(m_vertex)); // Starting from vertex 0; 3 vertices total -> 1 triangle
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
+	glDrawElements(GL_TRIANGLES, sizeof(m_indices) / sizeof(GLuint), GL_UNSIGNED_INT, (void*)0);
+	
+	glBindVertexArray(0);
+
 }

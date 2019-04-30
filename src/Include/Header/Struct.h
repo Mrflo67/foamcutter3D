@@ -13,6 +13,7 @@ struct WindowInfo {
 	int WINDOW_HEIGHT;
 	int corner;
 	float DISTANCE;
+	float zoomFactor;
 }; /* Set the size of the window */
 
 struct ImguiCheckBool {
@@ -20,10 +21,14 @@ struct ImguiCheckBool {
 	static bool show_demo_window;
 	static bool show_app_fixed_overlay;
 	static bool GCode_Info;
+	static bool information;
+	static bool about;
+	static bool show_settings;
 }; /* Check if Imgui window is open */
 
 struct FileContent {
 	std::string filePath;
+	std::string commands;
 	std::string line;
 	std::string fileName;
 	std::string recentFileName;

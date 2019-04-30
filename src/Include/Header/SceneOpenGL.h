@@ -30,5 +30,9 @@ private:
 	GLFWwindow* m_window;
 	Simulation m_simu;
 	ImguiMenuWindow m_gui;
+
 };
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
 

@@ -12,18 +12,18 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "imgui.h"
-#include "imgui_impl_glfw_gl3.h"
+#include <imgui.h>
+#include <imgui_impl_glfw_gl3.h>
+#include <tinyfiledialogs.h>
 
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
-
 #include "Struct.h"
-#include "tinyfiledialogs.h"
 #include "ImGui_Menu_Windows.h"
+#include "SelecteurFichier.h"
 
 
 
@@ -84,6 +84,7 @@ void ImguiMenuWindow::recentPath()
 	retrievePath();
 	content.recentFileName.clear(); // Reset the content of recentFileName
 
+
 	int i = 0;
 	int save = -1;
 
@@ -120,16 +121,17 @@ void ImguiMenuWindow::retrievePath()
 
 	if (myFile.is_open())
 	{
-		while (getline(myFile, (content.line))) /* Get every line of the file selected */
+		while (getline(myFile, content.line)) /* Get every line of the file selected */
 		{
-			content.fileName = content.line;
+			content.fileName = content.filePath = content.line;
 		}
 		myFile.close(); /* Close the file */
 	}
 }
 
-int ImguiMenuWindow::openRecent()
+int ImguiMenuWindow::openRecent(Simulation & simu)
 {
+	
 	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	content.filePath = content.fileName;
 	content.fileName.clear();
@@ -139,19 +141,134 @@ int ImguiMenuWindow::openRecent()
 		int error = tinyfd_messageBox("Error", "The file is missing", "okcancel", "error", 1);
 		return 0;
 	}
-	readGcode();
+	else
+	{
+		if (simu.ChargerGcode(content.filePath))
+		{
+			content.fileName = content.filePath;
+
+			savePath();
+
+			content.check = true;
+
+			simu.Init();
+		}
+	
+	}
+	
+
 	return 1;
+}
+
+void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
+{
+		static int length = cfg.plate.longueur;
+		static int width = cfg.plate.largeur;
+		//static int height = cfg.hauteurMaxFil;
+
+		static int lFoam = cfg.foam.longueur;
+		static int LFoam = cfg.foam.largeur;
+		static int hFoam = cfg.foam.hauteur;
+
+		static int posX = cfg.foam.posX;
+		static int posZ = cfg.foam.posZ;
+		static float angle = cfg.foam.angleY;
+
+		ImGui::TextUnformatted("Taille plateau");
+		ImGui::DragInt("Longueur", &length, 1.0f, 100, 2000, "%.0f");
+		ImGui::DragInt("Largeur", &width, 1.0f, 100, 2000, "%.0f");
+		//ImGui::TextUnformatted("Fil");
+		//ImGui::DragInt("Hauteur max", &height, 1.0f, 100, 2000, "%.0f");
+
+		if (ImGui::Button("Defaut", ImVec2(100,20)))
+		{
+			length = 800;
+			width = 600;
+			//height = 500;
+			LFoam = hFoam = lFoam = 100;
+			posX = posZ = 0;
+			angle = 0.0f;
+		}
+		ImGui::Separator();
+
+		ImGui::TextUnformatted("Piece a decouper");
+		ImGui::DragInt("longueur", &lFoam, 1.0f, 10, 2000, "%.0f");
+		ImGui::DragInt("largeur", &LFoam, 1.0f, 10, 2000, "%.0f");
+		ImGui::DragInt("hauteur", &hFoam, 1.0f, 10, 2000, "%.0f");
+
+		ImGui::DragInt("posX", &posX, 1.0f, -2000, 2000, "%.0f");
+		ImGui::DragInt("posZ", &posZ, 1.0f, -2000, 2000, "%.0f");
+		ImGui::SliderFloat("angleY", &angle,-180, 180, "%.0f");
+
+		static int limitX1, limitX2, limitZ1, limitZ2;
+
+		if (length < lFoam)
+			lFoam = length;
+		if (width < LFoam)
+			LFoam = width;
+
+		limitX1 = -length / 2 + lFoam /2;
+		limitX2 = length / 2 - lFoam /2;
+		limitZ1 = -width / 2 + LFoam /2;
+		limitZ2 = width / 2 - LFoam/ 2;
+
+		if (posX > limitX2)
+			posX = limitX2;
+		if (posX < limitX1)
+			posX = limitX1;
+		if (posZ > limitZ2)
+			posZ = limitZ2;
+		if (posZ < limitZ1)
+			posZ = limitZ1;
+
+		cfg.plate.longueur = length;
+		cfg.plate.largeur = width;
+		//cfg.hauteurMaxFil = height;
+
+		cfg.foam.longueur = lFoam;
+		cfg.foam.hauteur = hFoam;
+		cfg.foam.largeur = LFoam;
+
+		cfg.foam.posX = posX;
+		cfg.foam.posZ = posZ;
+		cfg.foam.angleY = angle;
+
+		simu.m_cube->setLargeur((float)LFoam);
+		simu.m_cube->setLongueur(lFoam);
+		simu.m_cube->setHauteur(hFoam);
+		simu.m_cube->setPosX(posX);
+		simu.m_cube->setPosZ(posZ);
+}
+
+void ImguiMenuWindow::graphicSettings(Config & cfg)
+{
+	ImGui::TextUnformatted("Options graphiques");
+	ImGui::TextUnformatted("V sync");
+	ImGui::SameLine();
+	static int e = 1;
+	ImGui::RadioButton("OFF", &e, 0); ImGui::SameLine();
+	ImGui::RadioButton("ON", &e, 1);
+	if (ImGui::Button("Valider"))
+	{
+		if (e)
+			cfg.graphics.vsync = true;
+		else
+			cfg.graphics.vsync = false;
+	}
 }
 
 /* Open the filedialog to select GCode */
 void ImguiMenuWindow::openFileDialog(Simulation &simu)
 {
-	//std::cout << "Mutex is take by : " << __func__ << std::endl;
+	SelecteurFichier sf;
+	std::string filename = sf.select();
 
-	if(simu.ChargerGcode())
-	simu.Init();
-
-	savePath();
+	if (simu.ChargerGcode(filename))
+	{
+		savePath();
+		content.check = true;
+		simu.Init();
+	}
 	recentPath();
 }
 
@@ -159,29 +276,17 @@ void ImguiMenuWindow::openFileDialog(Simulation &simu)
 void ImguiMenuWindow::readGcode()
 {
 	//std::cout << "Mutex is take by : " << __func__ << std::endl;
-	std::ifstream myFile(content.filePath); /* Open the file */
 
-	if (&content.check) /* Check if we already read the file / If not read the file */
+	if (content.check)
 	{
-		if (myFile.is_open())
-		{
-			while (getline(myFile, (content.line))) /* Get every line of the file selected */
-			{
-				ImGui::Text(content.line.c_str()); /* Display the line */
-			}
-			myFile.close(); /* Close the file */
-			content.check = false; /* Set the file to already read */
-		}
-		else
-		{
-			ImGui::Text("Unable to open File");
-			ImGui::Text("Check if the file format is the right one !");
-		}
+		ImGui::TextUnformatted(content.recentFileName.c_str());
+		ImGui::Separator();
+		ImGui::Text(content.commands.c_str()); /* Display the line */
 	}
 	else
 	{
-		ImGui::Text("Select a File");
-		ImGui::Text("You can select the file by press the open button");
+		ImGui::Text("Aucun fichier choisi");
+		ImGui::Text("Vous pouvez charger un fichier en cliquant sur \"Open\"");
 	}
 }
 
@@ -194,19 +299,15 @@ void ImguiMenuWindow::GCodeInfo(bool* p_open)
 	ImGui::SetWindowSize(window_size);
 
 	/* Display the window if we open it */
-	if (ImGui::Begin("GCode Contents", p_open))
+	if (ImGui::Begin("Gcode", p_open))
 	{
-		ImGui::TextUnformatted(content.recentFileName.c_str());
-		ImGui::Separator();
 		readGcode(); /* Function that read the GCode file */
-		ImGui::Separator();
-		ImGui::Text("This is the end of the GCode");
 		ImGui::End();
 	}
 }
 
 /* Main menu bar fix at the top of the main window */
-void ImguiMenuWindow::AppMainMenuBar(Simulation &simu) 
+void ImguiMenuWindow::AppMainMenuBar(Simulation & simu, Config & config) 
 { 
 	//std::cout << "Mutex is take by : " << __func__ << std::endl;
 	/* Shortcut doesn't work now */
@@ -222,10 +323,16 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation &simu)
 			{
 				if (ImGui::MenuItem(content.recentFileName.c_str(), NULL))
 				{
-					openRecent();
+					openRecent(simu);
 				}
 				ImGui::EndMenu();
 			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Display"))
+		{
+			ImGui::MenuItem("Informations", "Ctrl+I", &Render_Open.information);
+			ImGui::MenuItem("Open GCode", "Ctrl+R", &Render_Open.GCode_Info);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("About", "Ctrl+A")) /* Information about the program */
@@ -236,9 +343,19 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation &simu)
 			}
 			ImGui::EndMenu();
 		}
-		if (ImGui::MenuItem("Quit", "Alt+F4"))
+		if (ImGui::BeginMenu("Settings", "Ctrl + S"))
 		{
-			exit(0); /* Quit the program */
+			if (ImGui::BeginMenu("Reglages machine"))
+			{
+				machineSettings(config, simu);
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Graphics"))
+			{
+				graphicSettings(config);
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
 	}
@@ -248,17 +365,19 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation &simu)
 void ImguiMenuWindow::ImguiRender()
 {
 	//std::cout << "Mutex is take by : " << __func__ << std::endl;
-	ImGui::Begin("Informations");
+	if (Render_Open.information)
 	{
-		ImGui::SetNextWindowPos(ImVec2(info.WINDOW_WIDTH * 0.1f, info.WINDOW_HEIGHT * 0.5f), ImGuiCond_FirstUseEver);
 		ImGui::Information();
 	}
-	ImGui::End();
 
-	if (Render_Open.open_Gcode)
+	if (Render_Open.GCode_Info)
 	{
-		ImGui::SetNextWindowPos(ImVec2(info.WINDOW_WIDTH * 0.6f, info.WINDOW_HEIGHT * 0.1f), ImGuiCond_FirstUseEver);
-		ImGui::OpenGcode();
+	//	ImGui::GCodeInfo();
+	}
+
+	if (Render_Open.about)
+	{
+
 	}
 
 	if (Render_Open.GCode_Info)
@@ -274,46 +393,33 @@ void ImguiMenuWindow::ImguiRender()
 
 }
 
-void ImGui::OpenGcode()
-{
-	//std::cout << "Mutex is take by : " << __func__ << std::endl;
-	ImGui::Begin("Open the GCode");
-	ImGui::Text("This is the GCode");
-	ImGui::Separator();
-	ImGui::Checkbox("Show App Fixed Overlay", &Render_Open.show_app_fixed_overlay);
-	if (ImGui::Button("Close GCode"))
-	{
-		Render_Open.open_Gcode = !Render_Open.open_Gcode;
-		Render_Open.show_app_fixed_overlay = !Render_Open.show_app_fixed_overlay;
-	}
-	ImGui::End();
-}
-
 void ImGui::Information(void)
 {
-	//std::cout << "Mutex is take by : " << __func__ << std::endl;
-	ImGui::SetNextWindowPos(ImVec2(10, 20), ImGuiCond_FirstUseEver);
-	ImGui::Checkbox("Open GCode", &Render_Open.open_Gcode); /* Make checkbox */
-	ImGui::Checkbox("Show Demo Window", &Render_Open.show_demo_window);
-	ImGui::Checkbox("Show GCode", &Render_Open.GCode_Info);
-	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); /* Display the actual framerate */
-	 /* Display the path of the file selected */
+	ImGui::Begin("Informations");
+	{
+		ImGui::SetNextWindowPos(ImVec2(info.WINDOW_WIDTH * 0.1f, info.WINDOW_HEIGHT * 0.5f), ImGuiCond_FirstUseEver);
+		//std::cout << "Mutex is take by : " << __func__ << std::endl;
+		ImGui::Checkbox("Show Demo Window", &Render_Open.show_demo_window);
+		//ImGui::Checkbox("Show GCode", &Render_Open.GCode_Info);
+		ImGui::Text("Application average %.1f ms/frame (%.1f FPS)",
+			1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); /* Display the actual framerate */
+		 /* Display the path of the file selected */
+
+	}ImGui::End();
 }
 
 void ImguiMenuWindow::axisPos(Simulation &simu)
 {
 	float axisValues[4];
 	simu.m_fil->getCurrentPos(axisValues);
-	float rotation = 0.0f;//todo getcurrentRotation
-	ImGui::SetNextWindowBgAlpha(0.3f); // Transparent background
+	float rotation = simu.m_cube->getRotationDeg();//todo getcurrentRotation
+	ImGui::SetNextWindowBgAlpha(0.4f); // Transparent background
 
 	ImGui::Begin("Axis Values");
-	
-	ImGui::TextUnformatted(simu.getCurrentCmd().c_str());
-	ImGui::Separator();
-	ImGui::Text("X: %f Y: %f",axisValues[0], axisValues[1]);
-	ImGui::Text("U: %f V: %f", axisValues[2], axisValues[3]);
-	ImGui::Text("B: %f", rotation);
+	ImGui::Text("X: %.4f Y: %.4f",axisValues[0], axisValues[1]);
+	ImGui::Text("U: %.4f V: %.4f", axisValues[2], axisValues[3]);
+	ImGui::Text("");
+	ImGui::Text("B: %.4f", rotation);
 
 	ImGui::End();
 }

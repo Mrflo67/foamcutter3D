@@ -1,33 +1,37 @@
 #pragma once
 #include "Gcode.h"
-#include "Cube.h"
 #include "Fil.h"
+#include "Mesh.h"
+#include "Cube.h"
+#include "Foam.h"
 
-#include <glm/fwd.hpp>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 class Simulation
 {
 public:
 	Simulation();
 	~Simulation();
-	
-	void BindObjects(Cube *cube, Fil *fil);
+
+	void BindObjects(Foam & cube, Fil & fil, Mesh & cutSurface);
 	void Demarrer();
 	void Arreter();
 	int Init();
 	int isRunning();
-	int SimulerDecoupe(float vitesse, float framerate, glm::mat4 &modelMatrix);
-	bool ChargerGcode();
+	int hasGcode();
+	int SimulerDecoupe(float vitesse, float framerate);
+	bool ChargerGcode(std::string filename);
 	std::string getCurrentCmd();
+	int getCurrentLineNb();
 
-	Cube *m_cube;
+	Foam *m_cube;
 	Fil *m_fil;
+	Mesh *m_cutSurface;
+	
 
 private:
 
 	Gcode m_gcode;
+	int m_gcodeLoaded;
 	int m_etat; //0 = stopped, 1=started
 	int m_absolu;
 	int m_priseOrigineMachine;
@@ -37,10 +41,12 @@ private:
 	float m_vitesseDecoupe;
 	float m_optionsCmd[5]; // [5] = {X, Y, U, V, B}
 	bool m_reset;
+	bool m_moveCmd;
 	std::string m_currentCmd;
+	int m_currentLineNb;
 	
-	int AnalyzeCmd();
-	int ExecuteCmd(glm::mat4 &modelMatrix, float framerate);
+	int NextCmd();
+	int MoveObjects(float framerate);
 
 };
 

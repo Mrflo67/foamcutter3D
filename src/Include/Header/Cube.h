@@ -4,29 +4,32 @@
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "Shader.h"
 
 
 class Cube
 {
 public:
-	Cube(float l, float h, float p);
+	Cube(float l, float h, float L,
+		std::string const vertexShader, std::string const fragmentShader);
 	~Cube();
 	void afficher(glm::mat4 &mvpMatrix);
-	glm::mat4 rotationY(float rotationAngle);
+	void rotationY(float rotationAngle);
+	float getRotationAngle();
+	int getLargeur();
 
 private:
 
-	float m_longueur;
-	float m_hauteur;
-	float m_profondeur;
 	float m_rotationY = 0.0f;
-	GLfloat m_vertex[12*3*3];
-	GLfloat m_color[12 * 3 * 3];
-	GLuint m_programID;
-	GLuint m_vertexbuffer;
-	GLuint m_colorbuffer;
-	GLuint m_VertexArrayID;
-	GLuint m_MatrixID;
+	int m_largeur;
 
+	GLfloat m_vertex[3*8];
+	GLuint m_indices[12 * 3];
+	
+	GLuint VBO;
+	GLuint VAO;
+	GLuint EBO;
+
+	Shader m_shader;
 };
 

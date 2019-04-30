@@ -1,4 +1,6 @@
-#include "tinyfiledialogs.h"
+#include "SelecteurFichier.h"
+
+#include <tinyfiledialogs.h>
 
 #include <iostream>
 #include <fstream>
@@ -6,10 +8,8 @@
 #include <string.h>
 #include <cstddef>
 
-#include "SelecteurFichier.h"
 
-
-#define EXTENSIONS  "*.gco" 
+#define EXTENSIONS  "*.gco", "*.gcode", "*.g"
 #define EXTENSION ".gco"
 #define TAILLELIMITE 1024*1024*100
 
@@ -126,7 +126,7 @@ bool SelecteurFichier::verifierLongueur(char const* nom)
 
 std::string SelecteurFichier::select()
 {
-	char const* filtre[1] = { EXTENSIONS };
+	char const* filtre[3] = { EXTENSIONS };
 	std::string nomFichierGcode = "";
 
 	while (nomFichierGcode == "")
@@ -135,8 +135,8 @@ std::string SelecteurFichier::select()
 
 		fichierChoisi = tinyfd_openFileDialog(
 			"Choix du gcode", // NULL or ""
-			"", // NULL or ""
-			1, // 0
+			"./", // NULL or ""
+			3, // 0
 			filtre, // NULL {"*.jpg","*.png"}
 			"Fichiers gcode", // NULL | "image files"
 			0); // 0
