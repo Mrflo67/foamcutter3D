@@ -227,21 +227,18 @@ float Fil::getEcartX()
 void Fil::setOriginPos(float X, float Y, float U, float V)
 {}
 
-void Fil::afficher(glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection)
+void Fil::afficher(glm::mat4 & mvpMatrix)
 {
 
 	glUseProgram(m_shader.getProgramID());
 
-	glm::mat4 mvpMatrix = projection * view * model;
-
 	GLuint MatrixID = glGetUniformLocation(m_shader.getProgramID(), "MVP");
 	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
-
 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
-	trajectory.Draw(m_shader, model, view, projection, 0);
+	trajectory.Draw(m_shader, mvpMatrix, 0);
 	
 }

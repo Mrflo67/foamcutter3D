@@ -1,21 +1,22 @@
 #include "ClipPlane.h"
+#include <iostream>
 
-
-
-ClipPlane::ClipPlane() : equation(glm::vec4(0,0,0,0)),
-point(glm::vec4(0,0,0,1)), a(0), b(0), c(0), c(0), d(0)
+ClipPlane::ClipPlane() : 
+point(glm::vec4(0,0,0,1)), eq(glm::vec4(0,0,0,0))
 {
 }
 
 ClipPlane::ClipPlane(const glm::vec3 & normal, const glm::vec3 & point):
-	point(glm::vec4(point, 1)), a(normal.x), b(normal.y), c(normal.z), d(computeDistance()),
-	equation(glm::vec4(normal, d))
+	point(glm::vec4(point, 1))
 {
+	eq.a = normal.x;
+	eq.b = normal.y;
+	eq.c = normal.z;
+	eq.d = computeDistance();
 }
 
 ClipPlane::ClipPlane(const glm::vec4 & equation, const glm::vec3 & point):
-	equation(equation), point(glm::vec4(point, 1)),
-	a(equation.x), b(equation.y), c(equation.z), d(equation.w)
+	eq(equation), point(glm::vec4(point, 1))
 {
 }
 
@@ -25,30 +26,58 @@ ClipPlane::~ClipPlane()
 
 glm::vec4 ClipPlane::getEquation() const
 {
-	return equation;
+	return glm::vec4(eq.a, eq.b, eq.c, eq.d);
 }
 
 void ClipPlane::transform(const glm::mat4 & transformationMatrix)
 {
-	glm::vec4 normal = glm::vec4(a, b, c, 0); //w =0 -> direction
+	glm::vec4 normal = glm::vec4(eq.a, eq.b, eq.c, 0); //w =0 -> direction
 
 	normal = transformationMatrix * normal;
 
 	point = transformationMatrix * point;
 
-	a = normal.x;
-	b = normal.y;
-	c = normal.z;
+	eq.a = normal.x;
+	eq.b = normal.y;
+	eq.c = normal.z;
 
-	d = computeDistance();
+	eq.d = computeDistance();
 
 }
+
+void ClipPlane::setPoint(glm::vec3 pt)
+{
+	point = glm::vec4(pt.x, pt.y, pt.z, 1);
+
+	eq.d = computeDistance();
+}
+
+
 
 float ClipPlane::computeDistance()
 {
 	float distance;
 
-	distance = -(a * point.x + b * point.y + c * point.z);
+	distance = -(eq.a * point.x + eq.b * point.y + eq.c * point.z);
+
+	//std::cout <<"d : "<< distance << std::endl;
 
 	return distance;
+}
+
+Equation::Equation()
+{
+	a = b = c = d = 0;
+}
+
+Equation::Equation(const glm::vec4 & eq)
+{
+	a = eq.x;
+	b = eq.y;
+	c = eq.z;
+	d = eq.w;
+}
+
+Equation::~Equation()
+{
 }

@@ -14,7 +14,7 @@ public:
 	Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil, 
 		std::string const vertexShader, std::string const fragmentShader);
 	~Fil();
-	void afficher(glm::mat4 & model, glm::mat4 &view, glm::mat4 &projection);
+	void afficher(glm::mat4 & mvp);
 	void majPos(float, float, float, float);
 	void setOriginPos(float, float, float, float);
 	void getCurrentPos(float pos[]);

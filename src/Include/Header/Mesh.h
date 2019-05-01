@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Shader.h"
+#include "ClipPlane.h"
 
 #include <string>
 #include <fstream>
@@ -34,8 +35,9 @@ public:
 		size_t sV, size_t sI);
 	~Mesh();
 	/* Functions */
+	void Draw(Shader const& shader, const glm::mat4 & mvp, int triangle);
 	void Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection, int triangle,
-		glm::vec4 planes[5] = 0);
+		std::array<ClipPlane, 5> & planes);
 	void genVertexNormals();
 
 	int load = 0;

@@ -85,8 +85,52 @@ Mesh::~Mesh()
 {
 }
 
+void Mesh::Draw(Shader const & shader, const glm::mat4 & mvpMatrix, int triangle)
+{
+	static size_t vSize = m_vertices.size();
+	static size_t iSize = m_indices.size();
+
+	if (m_indices.size() > 0 && m_vertices.size() > 0)
+	{
+		if (vSize != m_vertices.size())
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glBufferSubData(GL_ARRAY_BUFFER,
+				0,
+				m_vertices.size() * sizeof(float) * 3,
+				&m_vertices[0]);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,
+				0,
+				m_indices.size() * sizeof(unsigned int),
+				&m_indices[0]);
+		}
+		vSize = m_vertices.size();
+		iSize = m_indices.size();
+	}
+
+
+	glUseProgram(shader.getProgramID());
+
+
+	GLuint MatrixID = glGetUniformLocation(shader.getProgramID(), "MVP");
+	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
+
+	glBindVertexArray(VAO);
+
+
+	if (triangle == 1)
+		glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
+	else if (triangle == 0)
+		glDrawElements(GL_LINES, m_indices.size(), GL_UNSIGNED_INT, 0);
+	else
+		glDrawElements(GL_LINE_STRIP, m_indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
 void Mesh::Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection, int triangle,
-	glm::vec4 planes[5])
+	std::array<ClipPlane, 5> & planes)
 {
 	static size_t vSize = m_vertices.size();
 	static size_t iSize = m_indices.size();
@@ -119,19 +163,15 @@ void Mesh::Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::ma
 	GLuint MatrixID = glGetUniformLocation(shader.getProgramID(), "MVP");
 	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
 
-
-	if (planes != 0)
-	{
 		shader.setMat4("MODEL", model);
 		shader.setMat4("VIEW", view);
 
-		shader.setVec4("PLANE0", planes[0]);
-		shader.setVec4("PLANE1", planes[1]);
-		shader.setVec4("PLANE2", planes[2]);
-		shader.setVec4("PLANE3", planes[3]);
-		shader.setVec4("PLANE4", planes[4]);
+		shader.setVec4("PLANE0", planes[0].getEquation());
+		shader.setVec4("PLANE1", planes[1].getEquation());
+		shader.setVec4("PLANE2", planes[2].getEquation());
+		shader.setVec4("PLANE3", planes[3].getEquation());
+		shader.setVec4("PLANE4", planes[4].getEquation());
 
-	}
 	
 	glBindVertexArray(VAO);
 	

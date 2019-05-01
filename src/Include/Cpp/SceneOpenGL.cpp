@@ -25,6 +25,7 @@
 #include "Shader.h"
 #include "Foam.h"
 #include "Config.h"
+#include "ClipPlane.h"
 
 #include <iostream>
 
@@ -42,6 +43,15 @@
 
 #define VERTEX_SHADER_CUT_PATH "shaders/Cutsurface/CutVertexShader.txt"
 #define FRAGMENT_SHADER_CUT_PATH "shaders/Cutsurface/CutFragmentShader.txt"
+
+//normals for clip planes
+#define N_TOP 0, -1, 0
+#define N_BACK 0, 0, 1
+#define N_FRONT 0, 0, -1
+#define N_LEFT 1, 0, 0
+#define N_RIGHT -1, 0, 0
+
+
 
 SceneOpenGL::SceneOpenGL(std::string windowTitle, int width, int height):
 m_windowTitle(windowTitle), m_window(NULL),
@@ -121,7 +131,7 @@ void SceneOpenGL::mainLoop()
 	glm::mat4 ModelCube = Mat1; 
 	glm::mat4 ModelBase = Mat1;
 	glm::mat4 ModelFil = Mat1;
-	glm::mat4 ModelPlane = Mat1;
+
 
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	glm::mat4 mvpCube = Projection * View * ModelCube; // Remember, matrix multiplication is the other way around
@@ -139,19 +149,43 @@ void SceneOpenGL::mainLoop()
 	int draw = 0;
 	bool vsync = true;
 
-	glm::vec4 planes[5];
-
+	//clip planes
 	glEnable(GL_CLIP_DISTANCE0);
 	glEnable(GL_CLIP_DISTANCE1);
 	glEnable(GL_CLIP_DISTANCE2);
 	glEnable(GL_CLIP_DISTANCE3);
 	glEnable(GL_CLIP_DISTANCE4);
 
-	glm::vec4 normalTop(0, -1, 0, 1);
-	glm::vec4 normalBack(0, 0, -1, 1);
-	glm::vec4 normalFront(0, 0, 1,1);
-	glm::vec4 normalLeft(-1, 0, 0, 1);
-	glm::vec4 normalRight(1, 0, 0, 1);
+	std::array<glm::vec3, 5> normals;
+
+	normals[0] = glm::vec3(N_TOP);
+	normals[1] = glm::vec3(N_BACK);
+	normals[2] = glm::vec3(N_FRONT);
+	normals[3] = glm::vec3(N_LEFT);
+	normals[4] = glm::vec3(N_RIGHT);
+
+	std::array<glm::vec3, 5> points;
+
+	points[0] = glm::vec3(0, 1, 0); //top
+	points[1] = glm::vec3(0, 0, -0.5); //back
+	points[2] = glm::vec3(0, 0, 0.5); //front
+	points[3] = glm::vec3(-0.5, 0, 0); //left
+	points[4] = glm::vec3(0.5, 0,0); //right
+
+
+	std::array<ClipPlane,5> originalPlanes;
+
+	for (int i = 0; i < 5; ++i)
+	{
+		originalPlanes[i] = ClipPlane(normals[i], points[i]);
+	}
+
+	std::array<ClipPlane, 5> planes;
+
+	for (int i = 0; i < 5; ++i)
+	{
+		planes[i] = originalPlanes[i];
+	}
 
 	GLint params[4];
 
@@ -199,10 +233,13 @@ void SceneOpenGL::mainLoop()
 		ModelCube = glm::rotate(ModelCube, glm::radians(config.foam.angleY), glm::vec3(0,1,0));
 		ModelCube = glm::scale(ModelCube, glm::vec3(config.foam.longueur, config.foam.hauteur, config.foam.largeur));
 		ModelBase = glm::scale(ModelBase, glm::vec3(config.plate.longueur, 0.0f, config.plate.largeur));
-		
 
-		//ModelPlane = glm::translate(ModelPlane, glm::vec3(config.foam.posX, 1.0f, config.foam.posZ));
-		ModelPlane = glm::rotate(ModelPlane, glm::radians(config.foam.angleY), glm::vec3(0, 1, 0));
+		//test plane transformations
+		for (int i = 0; i < 5; ++i)
+		{
+			planes[i].transform(ModelCube);
+		}
+		
 
 
 		///! SIMULATION !///
@@ -232,21 +269,8 @@ void SceneOpenGL::mainLoop()
 		mvpBase = Projection * View * ModelBase;
 		mvpFil = Projection * View * ModelFil;
 		mvp1 = Projection * View * Mat1;
-	
-		//clip planes
-		normalTop.w = foam.getHauteur();
-		normalBack.w = foam.getPosZ() + foam.getLargeur() / 2;
 
-
-		normalFront.w = -foam.getPosZ() + foam.getLargeur() / 2;
-		normalLeft.w = foam.getPosX() + foam.getLongueur() / 2;
-		normalRight.w = -foam.getPosX() + foam.getLongueur() / 2;
-
-		planes[0] = glm::vec4(normalTop);
-		planes[1] = glm::vec4(ModelPlane * normalBack);
-		planes[2] = glm::vec4(ModelPlane * normalFront);
-		planes[3] = glm::vec4(ModelPlane * normalLeft);
-		planes[4] = glm::vec4(ModelPlane * normalRight);
+		
 
 
 		//draw 3D objects
@@ -262,29 +286,27 @@ void SceneOpenGL::mainLoop()
 		}
 		
 
-		
-
 		base.afficher(mvpBase);
 		cutSurface.Draw(cutShader, Mat1, View, Projection, 1, planes);
-		foam.mesh.Draw(foamShader, ModelCube, View, Projection, 0);
-		fil.afficher(ModelFil, View, Projection);
+		foam.mesh.Draw(foamShader, mvpCube, 0);
+		fil.afficher(mvpFil);
 	
 		//reset model matrix
 
 		ModelCube = saveModelCube;
 		ModelBase = saveModelBase;
-		ModelPlane = Mat1;
+
 
 
 		mvpCube = Projection * View * ModelCube;
 		mvpBase = Projection * View * ModelBase;
 
-		//reset plane normal 
-		normalTop.w = 1;
-		normalBack.w = 1;
-		normalFront.w = 1;
-		normalLeft.w = 1;
-		normalRight.w = 1;
+		//reset planes 
+
+		for (int i = 0; i < 5; ++i)
+		{
+			planes[i] = originalPlanes[i];
+		}
 
 		//imgui
 		
