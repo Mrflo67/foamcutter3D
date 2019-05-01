@@ -1,0 +1,42 @@
+#version 330 core
+
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec3 vertexNormal;
+
+uniform mat4 MVP;
+uniform mat4 MODEL;
+uniform mat4 VIEW;
+
+uniform vec4 PLANE0;
+uniform vec4 PLANE1;
+uniform vec4 PLANE2;
+uniform vec4 PLANE3;
+uniform vec4 PLANE4;
+
+out vec3 Normal;
+out vec3 FragPos;
+
+out gl_PerVertex
+{
+  vec4 gl_Position;
+  float gl_ClipDistance[5];
+};
+
+void main()
+{
+	vec4 worldPosition = MODEL * vec4(vertexPosition_modelspace, 1.0);
+
+	gl_ClipDistance[0] = dot(MODEL * vec4(vertexPosition_modelspace, 1.0), PLANE0);
+	gl_ClipDistance[1] = dot(MODEL * vec4(vertexPosition_modelspace, 1.0), PLANE1);
+	gl_ClipDistance[2] = dot(MODEL * vec4(vertexPosition_modelspace, 1.0), PLANE2);
+	gl_ClipDistance[3] = dot(MODEL * vec4(vertexPosition_modelspace, 1.0), PLANE3);
+	gl_ClipDistance[4] = dot(MODEL * vec4(vertexPosition_modelspace, 1.0), PLANE4);
+
+	
+  FragPos = vec3(MODEL * vec4(vertexPosition_modelspace,1.0));
+  //Normal = mat3(transpose(inverse(MODEL))) * vertexNormal;
+  Normal = vertexNormal;
+
+//homogeneous
+  gl_Position =  MVP * vec4(vertexPosition_modelspace,1.0);
+}
