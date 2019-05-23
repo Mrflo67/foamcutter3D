@@ -20,6 +20,7 @@ public:
 	int hasGcode();
 	int SimulerDecoupe(float vitesse, float framerate);
 	bool ChargerGcode(std::string filename);
+	void setBaseAngleInit(float r);
 	std::string getCurrentCmd();
 	int getCurrentLineNb();
 
@@ -44,6 +45,8 @@ private:
 	bool m_moveCmd;
 	std::string m_currentCmd;
 	int m_currentLineNb;
+	//angle in radians
+	float m_baseAngleInit;
 	
 	int NextCmd();
 	int MoveObjects(float framerate);

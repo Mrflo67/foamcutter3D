@@ -153,6 +153,14 @@ void Mesh::Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::ma
 		}
 		vSize = m_vertices.size();
 		iSize = m_indices.size();
+
+		if (vSize * sizeof(float) * 3 >= VBOsizeInit)
+		{
+			glBufferData(GL_ARRAY_BUFFER, VBOsizeInit * 2, &m_vertices[0], GL_STREAM_DRAW);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, EBOsizeInit*2,
+				&m_indices[0], GL_STREAM_DRAW);
+		}
+	
 	}
 			
 	
@@ -183,7 +191,7 @@ void Mesh::Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::ma
 	else
 		glDrawElements(GL_LINE_STRIP, m_indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
-
+	glUseProgram(0);
 }
 
 void Mesh::setupMesh()
@@ -239,7 +247,7 @@ void Mesh::setupEmptyMesh()
 
 void Mesh::genVertexNormals()
 {
-	std::cout << "generating normals..." << std::endl;
+	std::cout << "Generating normals..." << std::endl;
 	m_normals.clear();
 
 	std::array<float, 3> a0, a1, a2, a3;
@@ -272,10 +280,6 @@ void Mesh::genVertexNormals()
 
 		normal =- glm::normalize(glm::cross(vD-vB, vA - vB));
 
-		std::cout << normal.x << " ";
-		std::cout << normal.y << " ";
-		std::cout << normal.z << std::endl;
-	//	system("pause");
 
 		aNormal[0] = normal.x;
 		aNormal[1] = normal.y;
@@ -288,9 +292,7 @@ void Mesh::genVertexNormals()
 	}
 
 	
-	std::cout << "normales : " << m_normals.size();
-	std::cout << "  vertices : " << m_vertices.size();
-	std::cout << "  indices : " << m_indices.size() << std::endl;
+	
 
 	
 	glGenBuffers(1, &normalbuffer);
@@ -309,7 +311,7 @@ void Mesh::genVertexNormals()
 		(void*)0                          // array buffer offset
 	);
 
-	std::cout << "done" << std::endl;
+	std::cout << "Normals generated successfully !" << std::endl;
 }
 
 void Mesh::updateBuffers()

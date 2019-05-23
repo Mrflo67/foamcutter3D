@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 struct Plate {
 	unsigned int longueur;
@@ -35,9 +36,12 @@ public:
 	sFoam foam;
 	Graphics graphics;
 	
-	unsigned int hauteurMaxFil;
 	unsigned int fastSpeed;
 	int theme;
+
+	long int maxFileLength;
+	std::string validCmds;
+	std::string extensions;
 
 private:
 	static bool alreadyCreated;

@@ -28,7 +28,7 @@ public:
 
 	glm::vec4 getEquation() const;
 	void transform(const glm::mat4 &transformationMatrix);
-	void setPoint(glm::vec3 point);
+
 
 private:
 	Equation eq;

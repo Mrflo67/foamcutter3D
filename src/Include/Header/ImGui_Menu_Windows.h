@@ -12,7 +12,7 @@ public:
 	void getScreenResolution(void);
 	void AppMainMenuBar(Simulation & simu, Config & config);
 	void AppFixedOverlay(bool* p_open);
-	void openFileDialog(Simulation & simu);
+	void openGcode(Simulation & simu, long int & maxLength, std::string & extensionList, std::string & validCmdList);
 	void ImguiRender(void);
 	void GCodeInfo(bool* p_open);
 	void readGcode(void);
@@ -23,7 +23,7 @@ public:
 	int  openRecent(Simulation & simu);
 	void machineSettings(Config & cfg, Simulation & simu);
 	void graphicSettings(Config & cfg);
-	
+	void About(void);
 };
 
 /* using namespace ImGui */

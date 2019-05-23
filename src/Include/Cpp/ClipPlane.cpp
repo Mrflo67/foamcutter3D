@@ -35,6 +35,7 @@ void ClipPlane::transform(const glm::mat4 & transformationMatrix)
 
 	normal = transformationMatrix * normal;
 
+	//point= glm::vec4(x,y,z, w = 1-> position) 
 	point = transformationMatrix * point;
 
 	eq.a = normal.x;
@@ -45,12 +46,7 @@ void ClipPlane::transform(const glm::mat4 & transformationMatrix)
 
 }
 
-void ClipPlane::setPoint(glm::vec3 pt)
-{
-	point = glm::vec4(pt.x, pt.y, pt.z, 1);
 
-	eq.d = computeDistance();
-}
 
 
 
@@ -59,8 +55,6 @@ float ClipPlane::computeDistance()
 	float distance;
 
 	distance = -(eq.a * point.x + eq.b * point.y + eq.c * point.z);
-
-	//std::cout <<"d : "<< distance << std::endl;
 
 	return distance;
 }

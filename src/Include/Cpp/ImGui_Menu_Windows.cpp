@@ -164,7 +164,7 @@ void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
 {
 		static int length = cfg.plate.longueur;
 		static int width = cfg.plate.largeur;
-		//static int height = cfg.hauteurMaxFil;
+
 
 		static int lFoam = cfg.foam.longueur;
 		static int LFoam = cfg.foam.largeur;
@@ -177,14 +177,13 @@ void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
 		ImGui::TextUnformatted("Taille plateau");
 		ImGui::DragInt("Longueur", &length, 1.0f, 100, 2000, "%.0f");
 		ImGui::DragInt("Largeur", &width, 1.0f, 100, 2000, "%.0f");
-		//ImGui::TextUnformatted("Fil");
-		//ImGui::DragInt("Hauteur max", &height, 1.0f, 100, 2000, "%.0f");
+		
 
 		if (ImGui::Button("Defaut", ImVec2(100,20)))
 		{
 			length = 800;
 			width = 600;
-			//height = 500;
+		
 			LFoam = hFoam = lFoam = 100;
 			posX = posZ = 0;
 			angle = 0.0f;
@@ -223,7 +222,7 @@ void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
 
 		cfg.plate.longueur = length;
 		cfg.plate.largeur = width;
-		//cfg.hauteurMaxFil = height;
+		
 
 		cfg.foam.longueur = lFoam;
 		cfg.foam.hauteur = hFoam;
@@ -233,11 +232,14 @@ void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
 		cfg.foam.posZ = posZ;
 		cfg.foam.angleY = angle;
 
+		simu.m_cube->setRotationRad(glm::radians(angle));
 		simu.m_cube->setLargeur((float)LFoam);
 		simu.m_cube->setLongueur(lFoam);
 		simu.m_cube->setHauteur(hFoam);
 		simu.m_cube->setPosX(posX);
 		simu.m_cube->setPosZ(posZ);
+
+		simu.setBaseAngleInit(glm::radians(angle));
 }
 
 void ImguiMenuWindow::graphicSettings(Config & cfg)
@@ -245,23 +247,21 @@ void ImguiMenuWindow::graphicSettings(Config & cfg)
 	ImGui::TextUnformatted("Options graphiques");
 	ImGui::TextUnformatted("V sync");
 	ImGui::SameLine();
-	static int e = 1;
-	ImGui::RadioButton("OFF", &e, 0); ImGui::SameLine();
+	static int e = cfg.graphics.vsync;
+	ImGui::RadioButton("OFF", &e, 0);
+	ImGui::SameLine();
 	ImGui::RadioButton("ON", &e, 1);
-	if (ImGui::Button("Valider"))
-	{
 		if (e)
 			cfg.graphics.vsync = true;
 		else
 			cfg.graphics.vsync = false;
-	}
 }
 
 /* Open the filedialog to select GCode */
-void ImguiMenuWindow::openFileDialog(Simulation &simu)
+void ImguiMenuWindow::openGcode(Simulation &simu, long int & maxLength, std::string & extensionList, std::string & validCmdList)
 {
 	SelecteurFichier sf;
-	std::string filename = sf.select();
+	std::string filename = sf.select(maxLength, extensionList, validCmdList);
 
 	if (simu.ChargerGcode(filename))
 	{
@@ -317,7 +317,7 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation & simu, Config & config)
 		{
 			if (ImGui::MenuItem("New GCode", NULL)) /* Button open */
 			{
-				openFileDialog(simu);
+				openGcode(simu, config.maxFileLength, config.extensions, config.validCmds);
 			}
 			if (ImGui::BeginMenu("Recent", "Ctrl+R")) /* Button recent */
 			{
@@ -335,14 +335,13 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation & simu, Config & config)
 			ImGui::MenuItem("Open GCode", "Ctrl+R", &Render_Open.GCode_Info);
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("About", "Ctrl+A")) /* Information about the program */
-		{
-			if (ImGui::MenuItem("Foam Cutter", NULL))
-			{
-				/* Retreive data from .txt file ?? */
-			}
-			ImGui::EndMenu();
-		}
+		//if (ImGui::BeginMenu("About", "Ctrl+A")) /* Information about the program */
+		//{
+			ImGui::MenuItem("About", NULL, &Render_Open.about);
+			//ImGui::EndMenu();
+			
+			
+		//}
 		if (ImGui::BeginMenu("Settings", "Ctrl + S"))
 		{
 			if (ImGui::BeginMenu("Reglages machine"))
@@ -362,6 +361,22 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation & simu, Config & config)
 
 }
 
+void ImguiMenuWindow::About()
+{
+	//std::cout << "Mutex is take by : " << __func__ << std::endl;
+	ImGui::OpenPopup("About");
+	if (ImGui::BeginPopupModal("About"))
+	{
+		ImGui::TextUnformatted("Filshow 3D Simulator\n2018-2019\nBTS SN\nLycee Heinrich Nessel Haguenau");
+		if (ImGui::Button("Close"))
+		{
+			ImGui::CloseCurrentPopup();
+			Render_Open.about = !Render_Open.about;
+		}
+		ImGui::EndPopup();
+	}
+}
+
 void ImguiMenuWindow::ImguiRender()
 {
 	//std::cout << "Mutex is take by : " << __func__ << std::endl;
@@ -370,14 +385,14 @@ void ImguiMenuWindow::ImguiRender()
 		ImGui::Information();
 	}
 
-	if (Render_Open.GCode_Info)
+	/*if (Render_Open.GCode_Info)
 	{
 	//	ImGui::GCodeInfo();
-	}
+	}*/
 
 	if (Render_Open.about)
 	{
-
+		About();
 	}
 
 	if (Render_Open.GCode_Info)
@@ -385,11 +400,11 @@ void ImguiMenuWindow::ImguiRender()
 		GCodeInfo(&Render_Open.GCode_Info);
 	}
 
-	if (Render_Open.show_demo_window)
+	/*if (Render_Open.show_demo_window)
 	{
 		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
 		ImGui::ShowDemoWindow(&Render_Open.show_demo_window);
-	}
+	}*/
 
 }
 
@@ -399,7 +414,7 @@ void ImGui::Information(void)
 	{
 		ImGui::SetNextWindowPos(ImVec2(info.WINDOW_WIDTH * 0.1f, info.WINDOW_HEIGHT * 0.5f), ImGuiCond_FirstUseEver);
 		//std::cout << "Mutex is take by : " << __func__ << std::endl;
-		ImGui::Checkbox("Show Demo Window", &Render_Open.show_demo_window);
+		//ImGui::Checkbox("Show Demo Window", &Render_Open.show_demo_window);
 		//ImGui::Checkbox("Show GCode", &Render_Open.GCode_Info);
 		ImGui::Text("Application average %.1f ms/frame (%.1f FPS)",
 			1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); /* Display the actual framerate */
@@ -416,10 +431,10 @@ void ImguiMenuWindow::axisPos(Simulation &simu)
 	ImGui::SetNextWindowBgAlpha(0.4f); // Transparent background
 
 	ImGui::Begin("Axis Values");
-	ImGui::Text("X: %.4f Y: %.4f",axisValues[0], axisValues[1]);
-	ImGui::Text("U: %.4f V: %.4f", axisValues[2], axisValues[3]);
+	ImGui::Text("X: %.4f Y: %.4f  (mm)",axisValues[0], axisValues[1]);
+	ImGui::Text("U: %.4f V: %.4f  (mm)", axisValues[2], axisValues[3]);
 	ImGui::Text("");
-	ImGui::Text("B: %.4f", rotation);
+	ImGui::Text("B: %.4f  (degrees)", rotation);
 
 	ImGui::End();
 }

@@ -92,7 +92,7 @@ std::string Gcode::getCommandes()
 	return this->m_commandes;
 }
 
-size_t Gcode::getTaille()
+size_t Gcode::getSize()
 {
 	return this->m_taille;
 }

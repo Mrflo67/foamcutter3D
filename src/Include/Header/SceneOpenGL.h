@@ -3,8 +3,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Struct.h"
-#include "ImGui_Menu_Windows.h"
-#include "Simulation.h"
 
 class SceneOpenGL
 {
@@ -17,7 +15,6 @@ public:
 	bool initWindow();
 	bool initGL();
 	bool initImGUI();
-	bool initSimu();
 	void mainLoop();
 
 private:
@@ -28,8 +25,6 @@ private:
 	float m_ratio;
 
 	GLFWwindow* m_window;
-	Simulation m_simu;
-	ImguiMenuWindow m_gui;
 
 };
 

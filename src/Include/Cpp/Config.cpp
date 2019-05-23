@@ -22,7 +22,6 @@ plusieurs instances de Config !");
 	this->fastSpeed = 10000;
 	this->plate.longueur = 800;
 	this->plate.largeur = 600;
-	this->hauteurMaxFil = 500;
 	this->foam.longueur = 100;
 	this->foam.largeur = 100;
 	this->foam.hauteur = 100;
@@ -30,8 +29,9 @@ plusieurs instances de Config !");
 	this->foam.posZ = 0;
 	this->foam.angleY = 0.0f;
 	this->graphics.vsync = true;
-
-
+	this->maxFileLength = 1000000;
+	this->validCmds = "G M S F P X Y U V B";
+	this->extensions = "*.gco *.gcode *.g";
 }
 
 bool Config::alreadyCreated = false;
@@ -46,18 +46,24 @@ int Config::Write()
 	json j;
 	j["plateau"]["longueur"] = this->plate.longueur;
 	j["plateau"]["largeur"] = this->plate.largeur;
-	j["fil"]["hauteurMax"] = this->hauteurMaxFil;
 	j["foam"]["longueur"] = this->foam.longueur;
 	j["foam"]["largeur"] = this->foam.largeur;
 	j["foam"]["hauteur"] = this->foam.hauteur;
-	j["foam"]["PosX"] = this->foam.posX;
-	j["foam"]["PosZ"] = this->foam.posZ;
+	j["foam"]["posX"] = this->foam.posX;
+	j["foam"]["posZ"] = this->foam.posZ;
 	j["foam"]["angle"] = this->foam.angleY;
 
 	j["graphics"]["vsync"] = this->graphics.vsync;
 
 	j["fastspeed"] = this->fastSpeed;
 	j["theme"] = this->theme;
+
+	j["gcode"]["longueurMax"] = this->maxFileLength;
+	j["gcode"]["commandesValides"] = this->validCmds;
+	j["gcode"]["extensions"] = this->extensions;
+
+
+
 
 	std::cout << "Ouverture de config.json ..." << std::endl;
 	std::ofstream ofs("config.json");
@@ -93,14 +99,20 @@ int Config::Read()
 		this->theme = j["theme"];
 		this->plate.longueur = j["plateau"]["longueur"];
 		this->plate.largeur = j["plateau"]["largeur"];
-		this->hauteurMaxFil = j["fil"]["hauteurMax"];
 		this->foam.longueur = j["foam"]["longueur"];
 		this->foam.largeur = j["foam"]["largeur"];
 		this->foam.hauteur = j["foam"]["hauteur"];
-		this->foam.posX = j["foam"]["PosX"];
-		this->foam.posZ = j["foam"]["PosZ"];
+		this->foam.posX = j["foam"]["posX"];
+		this->foam.posZ = j["foam"]["posZ"];
 		this->foam.angleY = j["foam"]["angle"];
 		this->graphics.vsync = j["graphics"]["vsync"];
+		this->maxFileLength = j["gcode"]["longueurMax"];
+
+		std::string validCmd = j["gcode"]["commandesValides"];
+		std::string ext = j["gcode"]["extensions"];
+
+		this->validCmds = validCmd;
+		this->extensions = ext;
 
 		std::cout << "La configuration a ete chargee" << std::endl;
 

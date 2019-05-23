@@ -4,7 +4,7 @@
 #include <array>
 
 
-
+//r : angle in radians !!
 Foam::Foam(float l, float h, float L, float r, float pX, float pZ) :
 	m_rotationY(r),
 	m_largeur(L), m_hauteur(h), m_longueur(l),
@@ -66,12 +66,12 @@ Foam::~Foam()
 
 float Foam::getRotationDeg()
 {
-	return m_rotationY;
+	return glm::degrees(m_rotationY);
 }
 
 float Foam::getRotationRad()
 {
-	return glm::radians(m_rotationY);
+	return m_rotationY;
 }
 
 float Foam::getLargeur()
@@ -124,7 +124,7 @@ void Foam::setPosZ(float pZ)
 	m_posZ = pZ;
 }
 
-void Foam::setRotation(float r)
+void Foam::setRotationRad(float r)
 {
 	m_rotationY = r;
 }

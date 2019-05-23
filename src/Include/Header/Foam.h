@@ -27,7 +27,7 @@ public:
 	void setHauteur(float h);
 	void setPosX(float pX);
 	void setPosZ(float pZ);
-	void setRotation(float r);
+	void setRotationRad(float r);
 
 	Mesh mesh;
 

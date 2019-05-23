@@ -1,10 +1,11 @@
-#include "Simulation.h"
+ #include "Simulation.h"
 #include "Cube.h"
 #include "Fil.h"
 #include "Struct.h"
 #include "SelecteurFichier.h"
 #include "Gcode.h"
 #include "Mesh.h"
+#include "MathFuncs.h"
 
 #include <iostream>
 #include <fstream>
@@ -155,7 +156,23 @@ int Simulation::NextCmd()
 		case 'Y': axisID = _Y; break;
 		case 'U': axisID = _U; break;
 		case 'V': axisID = _V; break;
-		case 'B': axisID = _B; break;
+		case 'B': axisID = _B; 
+			if (!m_priseOrigineMachine)
+			{
+				if (m_absolu)
+				{
+					m_cube->setRotationRad(cmdValue);
+				}
+				else
+				{
+					m_cube->setRotationRad(m_cube->getRotationRad() + cmdValue);
+				}
+			}
+			else
+			{
+				m_cube->setRotationRad(m_baseAngleInit);
+			}
+			break;
 		case 'F': m_vitesseDecoupe = cmdValue;
 			break;
 
@@ -168,6 +185,8 @@ int Simulation::NextCmd()
 			{
 				m_optionsCmd[0] = m_optionsCmd[1] = m_optionsCmd[2]
 					= m_optionsCmd[3] = m_optionsCmd[4] = 0.0f;
+
+				//m_optionsCmd[_Y] = m_optionsCmd[3] = 1.0f;
 
 			}
 			else if (m_priseOrigineProgramme)
@@ -205,7 +224,6 @@ int Simulation::MoveObjects(float framerate)
 	static float posDebut[5] = { 0.0f };
 	static float posFin[5] = { 0.0f };
 	static float pos[5] = { 0.0f };
-	float pas = 0.0f;
 	int endCmd = 0;
 	int fini = 0;
 	static std::array<float, 3> v0{ {0.0f, 0.0f, m_fil->posZ_XY} }; //debut XY
@@ -213,24 +231,26 @@ int Simulation::MoveObjects(float framerate)
 	static std::array<float, 3> v2 = v0; //fin XY
 	static std::array<float, 3> v3 = v1; //fin UV
 	static int ecartCentre = m_fil->getEcartX();
-
+	//float Ax, Bx, Ay, By;
+	//glm::vec2 A;
+	//glm::vec2 B;
 	float posSurface[4];
+
 
 	if (m_finCmd)
 	{
-
 		m_fil->getInterFoamPos(pos, m_cube->getLargeur());
-
 
 		//vertices positions array for the cutter surface 
 		m_fil->getCurrentPos(posDebut);
 		posDebut[_B] = 0;
 
-		for (int i = _X; i < _B+1; i++)
+		for (int i = _X; i < _B+1; ++i)
 		{
 			posFin[i] = m_optionsCmd[i];
 		}
 
+		
 		m_fil->getInterFoamPos(posSurface, m_cube->getLargeur());
 
 		v0[0] = posSurface[_X] - ecartCentre;
@@ -239,19 +259,18 @@ int Simulation::MoveObjects(float framerate)
 		v1[0] = posSurface[_U]- ecartCentre;
 		v1[1] = posSurface[_V];
 		//v1[2] = - (m_cube->getLargeur() / 2);
-
-	}
-
-
+	   	}
+	
 	m_fil->getCurrentPos(pos);
 	pos[_B] = m_cube->getRotationDeg();
 
 	fini = 0;
-	
 
-	for (int i = _X; i < _B+1; i++)
+	static float pas = 0;
+	
+	for (int i = _X; i < _B + 1; i++)
 	{
-		pas = ((m_vitesseSimulation > VITESSE_MAX_SIMULATION) * fabs(posFin[i] - posDebut[i])) + 
+		pas = ((m_vitesseSimulation > VITESSE_MAX_SIMULATION) * fabs(posFin[i] - posDebut[i])) +
 			m_vitesseSimulation *
 			(m_vitesseDecoupe / VITESSE_MAX_DECOUPE) * (VITESSE_MAX_DECOUPE / 60.0f / framerate);
 
@@ -262,9 +281,9 @@ int Simulation::MoveObjects(float framerate)
 			{
 				pos[i] = posFin[i];
 				fini++;
-			}	
+			}
 		}
-		else if(posDebut[i] > posFin[i])
+		else if (posDebut[i] > posFin[i])
 		{
 			pos[i] -= pas;
 			if (pos[i] < posFin[i])
@@ -275,12 +294,15 @@ int Simulation::MoveObjects(float framerate)
 		}
 		else
 		{
-			fini ++;
+			fini++;
 		}
 	}
+	
+
 	//std::cout << fini << std::endl;
 	if (fini == 5)
 	{
+		
 		endCmd = 1;
 	
 		m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
@@ -294,28 +316,7 @@ int Simulation::MoveObjects(float framerate)
 		//v3[2] = v1[2];
 		unsigned int offset = m_cutSurface->m_vertices.size();
 
-		float longueurCube = m_cube->getLongueur();
-		float limitInfX = -longueurCube / 2  + m_cube->getPosX();
-		float limitSupX =  m_cube->getPosX() + longueurCube / 2 ;
-
-		float hauteurCube = m_cube->getHauteur();
-		
-
-		/*if ((v0[0] > limitInfX || v2[0] > limitInfX) && (v1[0] < limitSupX || v3[0] < limitSupX) && 
-			(v0[1] < hauteurCube || v1[1] < hauteurCube || v2[1] < hauteurCube || v3[1] < hauteurCube))
-		{
-
-			m_cutSurface->m_vertices.push_back(v0);
-			m_cutSurface->m_vertices.push_back(v1);
-			m_cutSurface->m_vertices.push_back(v2);
-			m_cutSurface->m_vertices.push_back(v3);
-			m_cutSurface->m_indices.push_back(offset);
-			m_cutSurface->m_indices.push_back(offset + 2);
-			m_cutSurface->m_indices.push_back(offset + 1);
-			m_cutSurface->m_indices.push_back(offset + 1);
-			m_cutSurface->m_indices.push_back(offset + 2);
-			m_cutSurface->m_indices.push_back(offset + 3);
-		}*/
+	
 
 		m_cutSurface->m_vertices.push_back(v0);
 		m_cutSurface->m_vertices.push_back(v1);
@@ -347,6 +348,7 @@ int Simulation::isRunning()
 void Simulation::BindObjects(Foam &cube, Fil &fil, Mesh &cutSurface)
 {
 	m_cube = &cube;
+	m_baseAngleInit = cube.getRotationRad();
 	m_fil = &fil;
 	m_cutSurface = &cutSurface;
 }
@@ -382,7 +384,8 @@ int Simulation::Init()
 
 	if (m_cube != NULL && m_fil != NULL)
 	{
-		//m_cube->rotationY(0.0f);
+		m_cube->setRotationRad(m_baseAngleInit);
+
 		m_fil->majPos(0.0f, 0.0f, 0.0f, 0.0f);
 		m_fil->trajectory.m_vertices.clear();
 		m_fil->trajectory.m_indices.clear();
@@ -406,24 +409,33 @@ int Simulation::hasGcode()
 bool Simulation::ChargerGcode(std::string filename)
 {
 	m_gcodeLoaded = 0;
-
-	if (filename == "")
+	if (filename.length() == 0)
 	{
+		std::cout << "le nom du fichier est trop court";
 		
-		return 0;
+		return false;
 	}
 	else
 	{
 		Gcode gcode(filename);
 		m_gcode = gcode;
 
-		if(m_gcode.isLoaded())
+		if (!m_gcode.isLoaded())
+			return false;
 		m_gcodeLoaded = 1;
 
+		//gui
 		content.filePath = filename;
 		content.fileName = filename;
 		content.commands = std::string(gcode.getCommandes());
 	}
 
 	return true;
+}
+
+
+//in radians
+void Simulation::setBaseAngleInit(float r)
+{
+	m_baseAngleInit = r;
 }

@@ -14,7 +14,7 @@ public:
 	~Gcode();
 
 	int isLoaded();
-	size_t getTaille();
+	size_t getSize();
 	std::string getName();
 	std::string getlineCommand(bool reset);
 	std::string getCommandes();
