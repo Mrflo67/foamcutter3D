@@ -1,3 +1,9 @@
+/**
+*	WIRE.CPP FILE
+*	RENDER THE WIRE
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #include "Fil.h"
 #include "Shader.h"
 #include <iostream>
@@ -140,83 +146,7 @@ void Fil::getOriginPos(float pos[])
 
 void Fil::getInterFoamPos(float pos[4], float LFoam)
 {
-	/*
-	//1. Computing vertical position
-
-	float Vangle; //vertical angle between A(X,Y) and B(U,V)
-	//A and B : near and far wire ends;
-	float posAX = posZ_XY;
-	float posAY = m_currentPos[1];
-	float posBX = posZ_UV;
-	float posBY = m_currentPos[3];
-	//F1 and F2 = foam wideness pos X
-	float largeurFoam = LFoam; //todo
-	float xF1 = largeurFoam/2;
-	float posYInter1, posYInter2;
-
-	if (posAY > posBY)
-	{
-		Vangle = glm::atan(abs((posAY - posBY) / (posAX - posBX)));
-		posYInter1 = posAY - glm::tan(Vangle) * (posAX - xF1);
-		posYInter2 = posAY - glm::tan(Vangle) * (posAX + xF1);
-	}
-	else if (posBY > posAY)
-	{
-		Vangle = glm::atan((posBY - posAY) / (posAX - posBX));
-		Vangle = glm::atan(abs((posAY - posBY) / (posAX - posBX)));
-		posYInter2 = posBY - glm::tan(Vangle) * (posAX - xF1);
-		posYInter1 = posBY - glm::tan(Vangle) * (posAX + xF1);
-
-	}
-	else
-	{
-		Vangle = 0;
-		posYInter1 = posAY;
-		posYInter2 = posBY;
-	}
-
-	pos[1] = posYInter1;
-	pos[3] = posYInter2;
-
-
-
-
-	float Hangle;
-	posAY = *m_currentPos;
-	posBY = m_currentPos[2];
-	posAX = posZ_XY;
-	posBX = posZ_UV;
-	float longueurFoam = LFoam;
-	xF1 = longueurFoam / 2;
-	float posXInter1, posXInter2;
-
-	if (posAY > posBY)
-	{
-		Hangle = glm::atan(abs((posAY - posBY) / (posAX - posBX)));
-		posXInter1 = posAY - glm::tan(Hangle) * (posAX - xF1);
-		posXInter2 = posAY - glm::tan(Hangle) * (posAX + xF1);
-	}
-	else if (posAY < posBY)
-	{
-		Hangle = glm::atan(abs((posAY - posBY) / (posAX - posBX)));
-		posXInter2 = posBY - glm::tan(Hangle) * (posAX - xF1);
-		posXInter1 = posBY - glm::tan(Hangle) * (posAX + xF1);
-		
-	}
-	else
-	{
-		Vangle = 0;
-		posXInter1 = posAY;
-		posXInter2 = posBY;
-	}
-
-
-	pos[0] = posXInter1;
-	pos[2] = posXInter2;
-	*/
-
 	getCurrentPos(pos);
-
 }
 
 float Fil::getEcartX()

@@ -1,6 +1,7 @@
 /**
-*	IMGUI_MENU.CPP FILE
-*	DEFINE ALL THE IMGUI CONFIGURATION
+*	IMGUI_MENU_WINDOWS.CPP FILE
+*	DEFINE ALL THE IMGUI CONFIGURATION AND WINDOWS
+*	PROJECT BTS SN 2019 - FOAM CUTTER
 */
 
 #ifdef _WIN32
@@ -23,9 +24,7 @@
 
 #include "Struct.h"
 #include "ImGui_Menu_Windows.h"
-#include "SelecteurFichier.h"
-
-
+#include "FileSelector.h"
 
 struct WindowInfo info;
 struct ImguiCheckBool Render_Open;
@@ -162,17 +161,17 @@ int ImguiMenuWindow::openRecent(Simulation & simu)
 
 void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
 {
-		static int length = cfg.plate.longueur;
-		static int width = cfg.plate.largeur;
+		static int length = cfg.Plate.length;
+		static int width = cfg.Plate.width;
 
 
-		static int lFoam = cfg.foam.longueur;
-		static int LFoam = cfg.foam.largeur;
-		static int hFoam = cfg.foam.hauteur;
+		static int lFoam = cfg.sFoam.length;
+		static int LFoam = cfg.sFoam.width;
+		static int hFoam = cfg.sFoam.height;
 
-		static int posX = cfg.foam.posX;
-		static int posZ = cfg.foam.posZ;
-		static float angle = cfg.foam.angleY;
+		static int posX = cfg.sFoam.posX;
+		static int posZ = cfg.sFoam.posZ;
+		static float angle = cfg.sFoam.angleY;
 
 		ImGui::TextUnformatted("Taille plateau");
 		ImGui::DragInt("Longueur", &length, 1.0f, 100, 2000, "%.0f");
@@ -220,22 +219,22 @@ void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
 		if (posZ < limitZ1)
 			posZ = limitZ1;
 
-		cfg.plate.longueur = length;
-		cfg.plate.largeur = width;
+		cfg.Plate.length = length;
+		cfg.Plate.width = width;
 		
 
-		cfg.foam.longueur = lFoam;
-		cfg.foam.hauteur = hFoam;
-		cfg.foam.largeur = LFoam;
+		cfg.sFoam.length = lFoam;
+		cfg.sFoam.height = hFoam;
+		cfg.sFoam.width = LFoam;
 
-		cfg.foam.posX = posX;
-		cfg.foam.posZ = posZ;
-		cfg.foam.angleY = angle;
+		cfg.sFoam.posX = posX;
+		cfg.sFoam.posZ = posZ;
+		cfg.sFoam.angleY = angle;
 
 		simu.m_cube->setRotationRad(glm::radians(angle));
-		simu.m_cube->setLargeur((float)LFoam);
-		simu.m_cube->setLongueur(lFoam);
-		simu.m_cube->setHauteur(hFoam);
+		simu.m_cube->setWidth((float)LFoam);
+		simu.m_cube->setLength(lFoam);
+		simu.m_cube->setHeight(hFoam);
 		simu.m_cube->setPosX(posX);
 		simu.m_cube->setPosZ(posZ);
 
@@ -244,23 +243,22 @@ void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
 
 void ImguiMenuWindow::graphicSettings(Config & cfg)
 {
-	ImGui::TextUnformatted("Options graphiques");
 	ImGui::TextUnformatted("V sync");
 	ImGui::SameLine();
-	static int e = cfg.graphics.vsync;
+	static int e = cfg.Graphics.vsync;
 	ImGui::RadioButton("OFF", &e, 0);
 	ImGui::SameLine();
 	ImGui::RadioButton("ON", &e, 1);
 		if (e)
-			cfg.graphics.vsync = true;
+			cfg.Graphics.vsync = true;
 		else
-			cfg.graphics.vsync = false;
+			cfg.Graphics.vsync = false;
 }
 
 /* Open the filedialog to select GCode */
 void ImguiMenuWindow::openGcode(Simulation &simu, long int & maxLength, std::string & extensionList, std::string & validCmdList)
 {
-	SelecteurFichier sf;
+	FileSelector sf;
 	std::string filename = sf.select(maxLength, extensionList, validCmdList);
 
 	if (simu.ChargerGcode(filename))

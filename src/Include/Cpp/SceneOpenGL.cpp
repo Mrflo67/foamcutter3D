@@ -1,5 +1,10 @@
-#include <GL/glew.h>
+/**
+*	SCENEOPENGL.CPP FILE
+*	INITIALIZE AND RENDER OUR PROJECT
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
 
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #ifdef __unix
 #define GLFW_EXPOSE_NATIVE_X11
@@ -17,7 +22,7 @@
 
 #include "SceneOpenGL.h"
 #include "Struct.h"
-#include "Cube.h"
+#include "Base.h"
 #include "Fil.h"
 #include "Simulation.h"
 #include "ImGui_Menu_Windows.h"
@@ -28,7 +33,6 @@
 #include "ClipPlane.h"
 
 #include <iostream>
-
 
 #define BACKGROUND_COLOR 1.0f, 1.0f, 1.0f
 
@@ -51,6 +55,8 @@
 #define N_LEFT 1, 0, 0
 #define N_RIGHT -1, 0, 0
 
+#define ZFAR 1750.0f
+#define ZNEAR 300.0f
 
 SceneOpenGL::SceneOpenGL(std::string windowTitle, int width, int height):
 m_windowTitle(windowTitle), m_window(NULL),
@@ -79,16 +85,16 @@ void SceneOpenGL::mainLoop()
 
 	if (!config.Read()) //charger le fichier de config
 	{
+		std::cout << "Creating configuration file ..." << std::endl;
 		config.Write();//on le crée s'il est introuvable
 	}
 	
 	//recuperation des donnees du fichier config
-	float ecartCubeFil = config.plate.longueur / 2; 
-	float ecartMoteursFil = config.plate.largeur;
-	float tCubeX = config.foam.longueur;
-	float tCubeY = config.foam.hauteur;
-	float tCubeZ = config.foam.largeur;
-
+	float ecartCubeFil = config.Plate.length / 2; 
+	float ecartMoteursFil = config.Plate.width;
+	float tCubeX = config.sFoam.length;
+	float tCubeY = config.sFoam.height;
+	float tCubeZ = config.sFoam.width;
 
 	const glm::vec3 cubeCentrePos = glm::vec3(0, 50, 0);
 
@@ -99,17 +105,20 @@ void SceneOpenGL::mainLoop()
 
 	float zoomDefault = 1.0f;
 	float zoomFactor = zoomDefault;
+	float fov = 50.0f;
+	
+
 
 	//create 3D objects 
-	Cube base(1.0f, -1.0f, 1.0f, VERTEX_SHADER_BASE_PATH, FRAGMENT_SHADER_BASE_PATH);
-	//Cube cube(tCubeX, tCubeY, tCubeZ, VERTEX_SHADER_CUBE_PATH, FRAGMENT_SHADER_CUBE_PATH);
+	Base base(1.0f, -1.0f, 1.0f);
 	Fil fil(ecartCubeFil, 0.0f, ecartMoteursFil, VERTEX_SHADER_FIL_PATH, FRAGMENT_SHADER_FIL_PATH);
 	
 	Mesh cutSurface;
 	Shader cutShader(VERTEX_SHADER_CUT_PATH, FRAGMENT_SHADER_CUT_PATH);
-	Foam foam(tCubeX, tCubeY, tCubeZ, glm::radians(config.foam.angleY), config.foam.posX, config.foam.posZ);
+	Foam foam(tCubeX, tCubeY, tCubeZ, glm::radians(config.sFoam.angleY), config.sFoam.posX, config.sFoam.posZ);
 	Shader foamShader(VERTEX_SHADER_CUBE_PATH, FRAGMENT_SHADER_CUBE_PATH);
-	
+	Shader baseShader(VERTEX_SHADER_BASE_PATH, FRAGMENT_SHADER_BASE_PATH);
+
 	//add cutter and foam objects to the simulation
 	simu.BindObjects(foam, fil, cutSurface);
 
@@ -117,7 +126,7 @@ void SceneOpenGL::mainLoop()
 	
 	// Projection matrix : Field of View, ratio, display range : 0.1 unit <-> 100 units
 
-	glm::mat4 Projection = glm::perspective(glm::radians(50.0f / zoomFactor), m_ratio , 200.0f, 2000.0f);
+	glm::mat4 Projection = glm::perspective(glm::radians(fov / zoomFactor), m_ratio , ZNEAR, ZFAR);
 	//glm::mat4 ProjectionDefault = Projection;
 	glm::mat4 View  = glm::lookAt(
 		glm::vec3(camPos), // Camera is at (4,3,3), in World Space
@@ -189,9 +198,9 @@ void SceneOpenGL::mainLoop()
 			glfwSwapInterval((int)vsync);
 		}
 		else
-		if (config.graphics.vsync != vsync)
+		if (config.Graphics.vsync != vsync)
 		{
-			vsync = config.graphics.vsync;
+			vsync = config.Graphics.vsync;
 			glfwSwapInterval((int)vsync);
 
 		}
@@ -222,8 +231,8 @@ void SceneOpenGL::mainLoop()
 		//apply transformations
 		ModelCube = glm::translate(ModelCube, glm::vec3(foam.getPosX(), 1.0f, foam.getPosZ()));
 		ModelCube = glm::rotate(ModelCube, foam.getRotationRad(), glm::vec3(0,1,0));
-		ModelCube = glm::scale(ModelCube, glm::vec3(foam.getLongueur(), foam.getHauteur(), foam.getLargeur()));
-		ModelBase = glm::scale(ModelBase, glm::vec3(config.plate.longueur, 0.0f, config.plate.largeur));
+		ModelCube = glm::scale(ModelCube, glm::vec3(foam.getLength(), foam.getHeight(), foam.getWidth()));
+		ModelBase = glm::scale(ModelBase, glm::vec3(config.Plate.length, 0.0f, config.Plate.width));
 
 		
 		//test plane transformations
@@ -246,7 +255,7 @@ void SceneOpenGL::mainLoop()
 
 		//update mvp matrix
 
-		Projection = glm::perspective(glm::radians(50.0f / zoomFactor), m_ratio, 200.0f, 2000.0f);
+		Projection = glm::perspective(glm::radians(fov / zoomFactor), m_ratio, ZNEAR, ZFAR);
 
 		View = glm::lookAt(
 			glm::vec3(camPos), 
@@ -285,7 +294,7 @@ void SceneOpenGL::mainLoop()
 		glDisable(GL_CLIP_DISTANCE3);
 		glDisable(GL_CLIP_DISTANCE4);
 		
-		base.afficher(mvpBase);
+		base.mesh.Draw(baseShader, mvpBase, 1);
 		foam.mesh.Draw(foamShader, mvpCube, 0);
 		fil.afficher(mvpFil);
 
@@ -420,7 +429,8 @@ void SceneOpenGL::mainLoop()
 			ImGui::SliderFloat("Cam target X", &camTarget.x, -1000.0f, 1000.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("Cam target Y", &camTarget.y, 0.0f, 1000.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("Cam target Z", &camTarget.z, -1000.0f, 1000.0f, "%.3f", 1.0f);
-			
+
+
 		}ImGui::End();
 
 		/* Display the menu bar at the top of the window */

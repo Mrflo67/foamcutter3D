@@ -1,15 +1,22 @@
+/**
+*	CONFIG.H FILE
+*	CONFIG CLASS DECLARATION
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
+
 #pragma once
 #include <string>
 
 struct Plate {
-	unsigned int longueur;
-	unsigned int largeur;
+	unsigned int length;
+	unsigned int width;
 };
 
 struct sFoam {
-	unsigned int longueur;
-	unsigned int largeur;
-	unsigned int hauteur;
+	unsigned int length;
+	unsigned int width;
+	unsigned int height;
 	int posX;
 	int posZ;
 	float angleY;
@@ -32,12 +39,11 @@ public:
 	int Write();
 	int Read();
 
-	Plate plate;
-	sFoam foam;
-	Graphics graphics;
+	Plate Plate;
+	sFoam sFoam;
+	Graphics Graphics;
 	
 	unsigned int fastSpeed;
-	int theme;
 
 	long int maxFileLength;
 	std::string validCmds;

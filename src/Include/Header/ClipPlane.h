@@ -1,10 +1,15 @@
+/**
+*	CLIPPLANE.H FILE
+*	CLIPPLANE CLASS DECLARATION
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #pragma once
 
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-
 
 //a plane is defined by its equation : ax + by + cz + d = 0
 //the d component may be calculated from a point which belongs to the plane

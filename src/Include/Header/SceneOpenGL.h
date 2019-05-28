@@ -1,3 +1,9 @@
+/**
+*	SCENEOPENGL.H FILE
+*	SCENEOPENGL CLASS DECLARATION
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #pragma once
 #include <string>
 #include <GL/glew.h>

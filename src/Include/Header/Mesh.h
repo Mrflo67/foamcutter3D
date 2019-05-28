@@ -1,3 +1,9 @@
+/**
+*	MESH.H FILE
+*	MESH CLASS DECLARATION
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 // File based on learnopengl.com tutorials
 
 #pragma once

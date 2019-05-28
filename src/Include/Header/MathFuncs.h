@@ -1,3 +1,9 @@
+/**
+*	MATHFUNCS.H FILE
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*
+*/
+
 #pragma once
 
 #include <glm/fwd.hpp>

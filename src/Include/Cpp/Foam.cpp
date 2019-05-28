@@ -1,13 +1,21 @@
+/**
+*	FOAM.CPP FILE
+*	FOAM RENDER
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #include "Foam.h"
 #include "Shader.h"
-#include <vector>
-#include <array>
 
-
-//r : angle in radians !!
+// h  : Height
+// l  : Lenght
+// L  : Width
+// r  : angle in radians !
+// pZ : position z
+// px : position x
 Foam::Foam(float l, float h, float L, float r, float pX, float pZ) :
 	m_rotationY(r),
-	m_largeur(L), m_hauteur(h), m_longueur(l),
+	m_width(L), m_height(h), m_length(l),
 	m_posX(pX), m_posZ(pZ)
 {
 	h = 1.0f;
@@ -15,12 +23,12 @@ Foam::Foam(float l, float h, float L, float r, float pX, float pZ) :
 	L = 0.5f;
 
 	GLfloat vertexPos[] = {
-		l, h, L,     //0 top right //coins face avant
+		l, h, L,     //0 top right //front face
 		l, 0.0f, L,  //1 bottom right
 		-l, 0.0f, L, //2 bottom left
 		-l, h, L,    //3 top left
 
-		-l, h, -L,   //4 top left //coins face arriere
+		-l, h, -L,   //4 top left //back face
 		-l, 0.0f, -L,//5 bottom left
 		l, 0.0f, -L, //6 bottom right
 		l, h, -L,    //7 top right
@@ -29,7 +37,7 @@ Foam::Foam(float l, float h, float L, float r, float pX, float pZ) :
 
 	GLuint indicesNum[] =
 	{
-		0,1,1,2,2,3,3,0,
+		0, 1,1,2,2,3,3,0,
 		4,5,5,6,6,7,7,4,
 		4,3,2,5,1,6,0,7,
 		
@@ -55,10 +63,6 @@ Foam::Foam(float l, float h, float L, float r, float pX, float pZ) :
 
 }
 
-void Foam::Draw(Shader & shader, glm::mat4 &mvpMatrix)
-{
-	//mesh.Draw(shader, mvpMatrix, 1);
-}
 
 Foam::~Foam()
 {
@@ -74,19 +78,19 @@ float Foam::getRotationRad()
 	return m_rotationY;
 }
 
-float Foam::getLargeur()
+float Foam::getWidth()
 {
-	return m_largeur;
+	return m_width;
 }
 
-float Foam::getHauteur()
+float Foam::getHeight()
 {
-	return m_hauteur;
+	return m_height;
 }
 
-float Foam::getLongueur()
+float Foam::getLength()
 {
-	return m_longueur;
+	return m_length;
 }
 
 float Foam::getPosX()
@@ -99,19 +103,19 @@ float Foam::getPosZ()
 	return m_posZ;
 }
 
-void Foam::setLargeur(float L)
+void Foam::setWidth(float L)
 {
-	m_largeur = L;
+	m_width = L;
 }
 
-void Foam::setLongueur(float l)
+void Foam::setLength(float l)
 {
-	m_longueur = l;
+	m_length = l;
 }
 
-void Foam::setHauteur(float h)
+void Foam::setHeight(float h)
 {
-	m_hauteur = h;
+	m_height = h;
 }
 
 void Foam::setPosX(float pX)

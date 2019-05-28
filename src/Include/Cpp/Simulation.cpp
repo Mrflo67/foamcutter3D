@@ -1,8 +1,8 @@
  #include "Simulation.h"
-#include "Cube.h"
+#include "Base.h"
 #include "Fil.h"
 #include "Struct.h"
-#include "SelecteurFichier.h"
+#include "FileSelector.h"
 #include "Gcode.h"
 #include "Mesh.h"
 #include "MathFuncs.h"
@@ -116,8 +116,6 @@ int Simulation::NextCmd()
 			{
 			case 0: m_vitesseDecoupe = VITESSE_MAX_DECOUPE;
 				break;
-			case 1: break;
-			case 4: break;
 			case 28: m_priseOrigineMachine = 1;
 				break;
 			case 90: m_absolu = 1;
@@ -133,15 +131,11 @@ int Simulation::NextCmd()
 		case 'M': {
 			switch ((int)cmdValue)
 			{
-			case 0: break;
-			case 1: break; 
-			case 2: Arreter(); m_reset = 1;
+				case 2: Arreter(); m_reset = 1;
 				m_cutSurface->genVertexNormals();
 				m_cutSurface->load = 1;
 				break;
-			case 3: break; 
-			case 5: break; 
-
+			
 			case 45: /*todo*/break;
 			case 46: /*todo*/break;
 			case 47: /*todo*/break;
@@ -239,7 +233,7 @@ int Simulation::MoveObjects(float framerate)
 
 	if (m_finCmd)
 	{
-		m_fil->getInterFoamPos(pos, m_cube->getLargeur());
+		m_fil->getInterFoamPos(pos, m_cube->getWidth());
 
 		//vertices positions array for the cutter surface 
 		m_fil->getCurrentPos(posDebut);
@@ -251,7 +245,7 @@ int Simulation::MoveObjects(float framerate)
 		}
 
 		
-		m_fil->getInterFoamPos(posSurface, m_cube->getLargeur());
+		m_fil->getInterFoamPos(posSurface, m_cube->getWidth());
 
 		v0[0] = posSurface[_X] - ecartCentre;
 		v0[1] = posSurface[_Y];
@@ -306,7 +300,7 @@ int Simulation::MoveObjects(float framerate)
 		endCmd = 1;
 	
 		m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
-		m_fil->getInterFoamPos(posSurface, m_cube->getLargeur());
+		m_fil->getInterFoamPos(posSurface, m_cube->getWidth());
 
 		v2[0] = posSurface[_X] - ecartCentre;
 		v2[1] = posSurface[_Y];

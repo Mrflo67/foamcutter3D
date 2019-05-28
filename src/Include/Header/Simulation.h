@@ -1,8 +1,14 @@
+/**
+*	FILE SIMULATION.H
+*	SIMULATION CLASS DECLARATION
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #pragma once
 #include "Gcode.h"
 #include "Fil.h"
 #include "Mesh.h"
-#include "Cube.h"
+#include "Base.h"
 #include "Foam.h"
 
 
@@ -45,8 +51,8 @@ private:
 	bool m_moveCmd;
 	std::string m_currentCmd;
 	int m_currentLineNb;
-	//angle in radians
-	float m_baseAngleInit;
+
+	float m_baseAngleInit;	//angle in radians
 	
 	int NextCmd();
 	int MoveObjects(float framerate);

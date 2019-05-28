@@ -1,3 +1,9 @@
+/**
+*	IMGUI_MENU_WINDOWS.H FILE
+*	CLASS IMGUIMENUWINDOW DECLARATION
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #pragma once
 
 #include "Simulation.h"

@@ -1,3 +1,10 @@
+/**
+*	CONFIG.CPP FILE
+*	RETRIEVE THE CONFIGURATION OF THE PROJECT
+*	PROJECT BTS SN 2019 - Foam CUTTER
+*/
+
+
 #include "Config.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -8,27 +15,28 @@
 // for convenience
 using json = nlohmann::json;
 
+const std::string configFileName = "config.json";
+
 Config::Config()
 {
 	if (this->alreadyCreated)
-		throw std::logic_error("Impossible de creer\
-plusieurs instances de Config !");
+		throw std::logic_error("Can't create multiple instances of config file !");
 
 	this->alreadyCreated = true;
 
 	//default parameters
 	//used when the config file is unavailable
-	this->theme = 1;
+
 	this->fastSpeed = 10000;
-	this->plate.longueur = 800;
-	this->plate.largeur = 600;
-	this->foam.longueur = 100;
-	this->foam.largeur = 100;
-	this->foam.hauteur = 100;
-	this->foam.posX = 0;
-	this->foam.posZ = 0;
-	this->foam.angleY = 0.0f;
-	this->graphics.vsync = true;
+	this->Plate.length = 800;
+	this->Plate.width = 600;
+	this->sFoam.length = 100;
+	this->sFoam.width = 100;
+	this->sFoam.height = 100;
+	this->sFoam.posX = 0;
+	this->sFoam.posZ = 0;
+	this->sFoam.angleY = 0.0f;
+	this->Graphics.vsync = true;
 	this->maxFileLength = 1000000;
 	this->validCmds = "G M S F P X Y U V B";
 	this->extensions = "*.gco *.gcode *.g";
@@ -41,53 +49,52 @@ Config::~Config()
 	this->alreadyCreated = false;
 }
 
+// Write in config file
 int Config::Write()
 {
 	json j;
-	j["plateau"]["longueur"] = this->plate.longueur;
-	j["plateau"]["largeur"] = this->plate.largeur;
-	j["foam"]["longueur"] = this->foam.longueur;
-	j["foam"]["largeur"] = this->foam.largeur;
-	j["foam"]["hauteur"] = this->foam.hauteur;
-	j["foam"]["posX"] = this->foam.posX;
-	j["foam"]["posZ"] = this->foam.posZ;
-	j["foam"]["angle"] = this->foam.angleY;
+	j["plate"]["length"] = this->Plate.length;
+	j["plate"]["width"] = this->Plate.width;
+	j["foam"]["length"] = this->sFoam.length;
+	j["foam"]["width"] = this->sFoam.width;
+	j["foam"]["height"] = this->sFoam.height;
+	j["foam"]["posX"] = this->sFoam.posX;
+	j["foam"]["posZ"] = this->sFoam.posZ;
+	j["foam"]["angle"] = this->sFoam.angleY;
 
-	j["graphics"]["vsync"] = this->graphics.vsync;
+	j["graphics"]["vsync"] = this->Graphics.vsync;
 
 	j["fastspeed"] = this->fastSpeed;
-	j["theme"] = this->theme;
 
 	j["gcode"]["longueurMax"] = this->maxFileLength;
 	j["gcode"]["commandesValides"] = this->validCmds;
 	j["gcode"]["extensions"] = this->extensions;
 
-
-
-
-	std::cout << "Ouverture de config.json ..." << std::endl;
-	std::ofstream ofs("config.json");
+	std::cout << "Opening " + configFileName + " ..." << std::endl;
+	std::ofstream ofs(configFileName);
 
 	if (ofs.is_open())
 	{
 		ofs << std::setw(4) << j << std::endl;
-		std::cout<<"La configuration a ete sauvegardee"<<std::endl;
+		std::cout << "The configuration has been saved." << std::endl;
 		ofs.close();
 	}
 	else
 	{
-		std::cout << "Ouvrture de config.json impossible" << std::endl;
-		std::cout << "La configuration n'a pas pu etre sauvegardee" << std::endl;
+		std::cout << "Opening " + configFileName + " impossible" << std::endl;
+		std::cout << "Configuration save failed" << std::endl;
 	}
 	
 	return 0;
 }
 
+
+// Read config file
 int Config::Read()
 {
-	std::cout << "Ouverture de config.json ..." << std::endl;
+	std::cout << "Opening " + configFileName + " ..." << std::endl;
 
-	std::ifstream ifs("config.json");
+	std::ifstream ifs(configFileName);
 
 	if (ifs.is_open())
 	{
@@ -96,31 +103,29 @@ int Config::Read()
 		j = json::parse(ifs);
 
 		this->fastSpeed = j["fastspeed"];
-		this->theme = j["theme"];
-		this->plate.longueur = j["plateau"]["longueur"];
-		this->plate.largeur = j["plateau"]["largeur"];
-		this->foam.longueur = j["foam"]["longueur"];
-		this->foam.largeur = j["foam"]["largeur"];
-		this->foam.hauteur = j["foam"]["hauteur"];
-		this->foam.posX = j["foam"]["posX"];
-		this->foam.posZ = j["foam"]["posZ"];
-		this->foam.angleY = j["foam"]["angle"];
-		this->graphics.vsync = j["graphics"]["vsync"];
+		this->Plate.length = j["plate"]["length"];
+		this->Plate.width = j["plate"]["width"];
+		this->sFoam.length = j["foam"]["length"];
+		this->sFoam.width = j["foam"]["width"];
+		this->sFoam.height = j["foam"]["height"];
+		this->sFoam.posX = j["foam"]["posX"];
+		this->sFoam.posZ = j["foam"]["posZ"];
+		this->sFoam.angleY = j["foam"]["angle"];
+		this->Graphics.vsync = j["graphics"]["vsync"];
 		this->maxFileLength = j["gcode"]["longueurMax"];
-
+		
 		std::string validCmd = j["gcode"]["commandesValides"];
 		std::string ext = j["gcode"]["extensions"];
-
+		
 		this->validCmds = validCmd;
 		this->extensions = ext;
-
-		std::cout << "La configuration a ete chargee" << std::endl;
-
+		
+		std::cout << "Configuration loaded" << std::endl;
 		ifs.close();
 	}
 	else
 	{
-		std::cout << "Le fichier de configuration est introuvable" << std::endl;
+		std::cout << "The configuration file is not available" << std::endl;
 		return 0;
 	}
 

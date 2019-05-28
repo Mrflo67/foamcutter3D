@@ -1,3 +1,9 @@
+/**
+*	MATHFUNCS.CPP FILE
+*	DO THE MATHS
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #include "MathFuncs.h"
 
 float interpolate2L(glm::vec2 Adata, glm::vec2 Bdata, float x)

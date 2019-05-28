@@ -1,3 +1,9 @@
+/**
+*	GCODE.CPP FILE
+*	READ GCODE AND RETRIEVE COMMANDS
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #include "Gcode.h"
 #include <iostream>
 #include <string>
@@ -6,7 +12,7 @@
 #include <tinyfiledialogs.h>
 
 
-Gcode::Gcode(std::string filename) : m_name(""), m_commandes(""), m_taille(0)
+Gcode::Gcode(std::string filename) : m_name(""), m_commands(""), m_size(0)
 {
 	if (filename.length() > 0)
 	{
@@ -15,20 +21,20 @@ Gcode::Gcode(std::string filename) : m_name(""), m_commandes(""), m_taille(0)
 		if (gcodeFile.is_open())
 		{
 			char c;
-			std::string contenu;
+			std::string content;
 
 			while (gcodeFile.get(c)) //copier le contenu du fichier dans l'attribut "m_commandes de l'objet Gcode
 			{
-				contenu += c; //On le fait caractère par caractère
+				content += c; //On le fait caractère par caractère
 			}
 
-			if (contenu.rfind("M2") == std::string::npos)
+			if (content.rfind("M2") == std::string::npos)
 			{
-				contenu.append(" M2");
+				content.append(" M2");
 			}
 
-			m_commandes = contenu;
-			m_taille = m_commandes.size();
+			m_commands = content;
+			m_size = m_commands.size();
 			m_name = filename;
 
 			gcodeFile.close();
@@ -37,8 +43,8 @@ Gcode::Gcode(std::string filename) : m_name(""), m_commandes(""), m_taille(0)
 		{
 
 			tinyfd_messageBox(
-				"Erreur", // NULL or ""
-				"ouverture impossible, veuillez réessayer!", // NULL or "" may contain \n \t
+				"Error", // NULL or ""
+				"Can't open, try again", // NULL or "" may contain \n \t
 				"okcancel", // "ok" "okcancel" "yesno" "yesnocancel"
 				"warning", // "info" "warning" "error" "question"
 				1);
@@ -60,7 +66,7 @@ std::string Gcode::getName()
 std::string Gcode::getlineCommand(bool reset)
 {
 	std::string sCmdline = std::string("");
-	static unsigned int i = this->m_taille;
+	static unsigned int i = this->m_size;
 
 	if (reset)
 	{
@@ -68,19 +74,18 @@ std::string Gcode::getlineCommand(bool reset)
 		sCmdline = std::string("");
 	}
 
-	if (i >= m_taille)
+	if (i >= m_size)
 		i = 0;
-	if (m_commandes[i] == '\n')
+	if (m_commands[i] == '\n')
 		i++;
 
-	while (m_commandes[i] != '\n')
+	while (m_commands[i] != '\n')
 	{
-		sCmdline += m_commandes[i];
+		sCmdline += m_commands[i];
 		i++;
 
-		if (i >= m_taille)
+		if (i >= m_size)
 			break;
-
 	}
 
 	return sCmdline;
@@ -89,19 +94,19 @@ std::string Gcode::getlineCommand(bool reset)
 
 std::string Gcode::getCommandes()
 {
-	return this->m_commandes;
+	return this->m_commands;
 }
 
 size_t Gcode::getSize()
 {
-	return this->m_taille;
+	return this->m_size;
 }
 
 
 int Gcode::isLoaded()
 {
 
-	if (this->m_taille > 0)
+	if (this->m_size > 0)
 		return 1;
 
 	return 0;

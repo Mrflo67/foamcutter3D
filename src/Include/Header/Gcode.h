@@ -1,3 +1,9 @@
+/**
+*	GCODE.H FILE
+*	GCODE CLASS DECLARATION
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #pragma once
 
 #include <string>
@@ -6,8 +12,8 @@ class Gcode
 {
 private:
 	std::string m_name;
-	std::string m_commandes;
-	size_t m_taille;
+	std::string m_commands;
+	size_t m_size;
 
 public:
 	Gcode(std::string n);

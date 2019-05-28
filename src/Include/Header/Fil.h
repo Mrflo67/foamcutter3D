@@ -1,3 +1,9 @@
+/**
+*	WIRE.H FILE
+*	WIRE CLASS DECLARATION
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #pragma once
 #include <GL/glew.h>
 #include <glm/fwd.hpp>
@@ -5,7 +11,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include "Mesh.h"
-
 #include "Shader.h"
 
 class Fil

@@ -1,3 +1,9 @@
+/**
+*	CLIPPLANE.CPP FILE
+*	CREATE THE PLANE SURFACE
+*	PROJECT BTS SN 2019 - FOAM CUTTER
+*/
+
 #include "ClipPlane.h"
 #include <iostream>
 
