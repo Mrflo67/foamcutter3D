@@ -230,11 +230,9 @@ int Simulation::MoveObjects(float framerate)
 	//glm::vec2 B;
 	float posSurface[4];
 
-
 	if (m_finCmd)
 	{
-		m_fil->getInterFoamPos(pos, m_cube->getWidth());
-
+		m_fil->getCurrentPos(pos);
 		//vertices positions array for the cutter surface 
 		m_fil->getCurrentPos(posDebut);
 		posDebut[_B] = 0;
@@ -244,8 +242,7 @@ int Simulation::MoveObjects(float framerate)
 			posFin[i] = m_optionsCmd[i];
 		}
 
-		
-		m_fil->getInterFoamPos(posSurface, m_cube->getWidth());
+		m_fil->getCurrentPos(posSurface);
 
 		v0[0] = posSurface[_X] - ecartCentre;
 		v0[1] = posSurface[_Y];
@@ -300,7 +297,7 @@ int Simulation::MoveObjects(float framerate)
 		endCmd = 1;
 	
 		m_fil->majPos(pos[_X], pos[_Y], pos[_U], pos[_V]);
-		m_fil->getInterFoamPos(posSurface, m_cube->getWidth());
+		m_fil->getCurrentPos(posSurface);
 
 		v2[0] = posSurface[_X] - ecartCentre;
 		v2[1] = posSurface[_Y];
@@ -311,7 +308,6 @@ int Simulation::MoveObjects(float framerate)
 		unsigned int offset = m_cutSurface->m_vertices.size();
 
 	
-
 		m_cutSurface->m_vertices.push_back(v0);
 		m_cutSurface->m_vertices.push_back(v1);
 		m_cutSurface->m_vertices.push_back(v2);

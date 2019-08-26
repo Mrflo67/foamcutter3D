@@ -149,6 +149,7 @@ int ImguiMenuWindow::openRecent(Simulation & simu)
 			savePath();
 
 			content.check = true;
+			tinyfd_notifyPopup("Success", "Gcode file loaded", "info");
 
 			simu.Init();
 		}
@@ -173,31 +174,33 @@ void ImguiMenuWindow::machineSettings(Config & cfg, Simulation & simu)
 		static int posZ = cfg.sFoam.posZ;
 		static float angle = cfg.sFoam.angleY;
 
-		ImGui::TextUnformatted("Taille plateau");
-		ImGui::DragInt("Longueur", &length, 1.0f, 100, 2000, "%.0f");
-		ImGui::DragInt("Largeur", &width, 1.0f, 100, 2000, "%.0f");
+		ImGui::TextUnformatted("Plate (mm)");
+		ImGui::DragInt("Length", &length, 1.0f, 100, 2000, "%.0f");
+		ImGui::DragInt("Width", &width, 1.0f, 100, 2000, "%.0f");
 		
 
-		if (ImGui::Button("Defaut", ImVec2(100,20)))
+		if (ImGui::Button("Defaut Plate", ImVec2(100,20)))
 		{
 			length = 800;
 			width = 600;
-		
-			LFoam = hFoam = lFoam = 100;
-			posX = posZ = 0;
-			angle = 0.0f;
 		}
 		ImGui::Separator();
 
-		ImGui::TextUnformatted("Piece a decouper");
-		ImGui::DragInt("longueur", &lFoam, 1.0f, 10, 2000, "%.0f");
-		ImGui::DragInt("largeur", &LFoam, 1.0f, 10, 2000, "%.0f");
-		ImGui::DragInt("hauteur", &hFoam, 1.0f, 10, 2000, "%.0f");
+		ImGui::TextUnformatted("Foam to cut (mm)");
+		ImGui::DragInt("length", &lFoam, 1.0f, 10, 2000, "%.0f");
+		ImGui::DragInt("width", &LFoam, 1.0f, 10, 2000, "%.0f");
+		ImGui::DragInt("height", &hFoam, 1.0f, 10, 2000, "%.0f");
 
 		ImGui::DragInt("posX", &posX, 1.0f, -2000, 2000, "%.0f");
 		ImGui::DragInt("posZ", &posZ, 1.0f, -2000, 2000, "%.0f");
 		ImGui::SliderFloat("angleY", &angle,-180, 180, "%.0f");
 
+		if (ImGui::Button("Defaut Foam", ImVec2(100, 20)))
+		{
+			LFoam = hFoam = lFoam = 100;
+			posX = posZ = 0;
+			angle = 0.0f;
+		}
 		static int limitX1, limitX2, limitZ1, limitZ2;
 
 		if (length < lFoam)
@@ -283,8 +286,8 @@ void ImguiMenuWindow::readGcode()
 	}
 	else
 	{
-		ImGui::Text("Aucun fichier choisi");
-		ImGui::Text("Vous pouvez charger un fichier en cliquant sur \"Open\"");
+		ImGui::Text("No gcode loaded");
+		ImGui::Text("Click \"Open\" to load a gcode file");
 	}
 }
 
@@ -329,8 +332,8 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation & simu, Config & config)
 		}
 		if (ImGui::BeginMenu("Display"))
 		{
-			ImGui::MenuItem("Informations", "Ctrl+I", &Render_Open.information);
-			ImGui::MenuItem("Open GCode", "Ctrl+R", &Render_Open.GCode_Info);
+			//ImGui::MenuItem("Informations", "Ctrl+I", &Render_Open.information);
+			ImGui::MenuItem("GCode", "Ctrl+R", &Render_Open.GCode_Info);
 			ImGui::EndMenu();
 		}
 		//if (ImGui::BeginMenu("About", "Ctrl+A")) /* Information about the program */
@@ -342,7 +345,7 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation & simu, Config & config)
 		//}
 		if (ImGui::BeginMenu("Settings", "Ctrl + S"))
 		{
-			if (ImGui::BeginMenu("Reglages machine"))
+			if (ImGui::BeginMenu("Machine"))
 			{
 				machineSettings(config, simu);
 				ImGui::EndMenu();
@@ -354,6 +357,7 @@ void ImguiMenuWindow::AppMainMenuBar(Simulation & simu, Config & config)
 			}
 			ImGui::EndMenu();
 		}
+		ImGui::Text(" | %.1f ms | %.1f FPS", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::EndMainMenuBar();
 	}
 
@@ -378,12 +382,12 @@ void ImguiMenuWindow::About()
 void ImguiMenuWindow::ImguiRender()
 {
 	//std::cout << "Mutex is take by : " << __func__ << std::endl;
-	if (Render_Open.information)
+	/*if (Render_Open.information)
 	{
 		ImGui::Information();
 	}
 
-	/*if (Render_Open.GCode_Info)
+	if (Render_Open.GCode_Info)
 	{
 	//	ImGui::GCodeInfo();
 	}*/

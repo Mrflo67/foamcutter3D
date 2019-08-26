@@ -48,6 +48,9 @@
 #define VERTEX_SHADER_CUT_PATH "shaders/Cutsurface/CutVertexShader.txt"
 #define FRAGMENT_SHADER_CUT_PATH "shaders/Cutsurface/CutFragmentShader.txt"
 
+#define VERTEX_SHADER_GUIDE_PATH "shaders/Guide/GuideVertexShader.txt"
+#define FRAGMENT_SHADER_GUIDE_PATH "shaders/Guide/GuideFragmentShader.txt"
+
 //normals for clip planes
 #define N_TOP 0, -1, 0
 #define N_BACK 0, 0, 1
@@ -55,7 +58,7 @@
 #define N_LEFT 1, 0, 0
 #define N_RIGHT -1, 0, 0
 
-#define ZFAR 1750.0f
+#define ZFAR 3000.0f
 #define ZNEAR 300.0f
 
 SceneOpenGL::SceneOpenGL(std::string windowTitle, int width, int height):
@@ -108,44 +111,85 @@ void SceneOpenGL::mainLoop()
 	float fov = 50.0f;
 	
 
-
-	//create 3D objects 
+	//add 3D objects to the scene
+	//Base, Wire, Foam and shaders
 	Base base(1.0f, -1.0f, 1.0f);
-	Fil fil(ecartCubeFil, 0.0f, ecartMoteursFil, VERTEX_SHADER_FIL_PATH, FRAGMENT_SHADER_FIL_PATH);
-	
+	Fil fil(ecartCubeFil, 0.0f, ecartMoteursFil);
+	Shader filShader(VERTEX_SHADER_FIL_PATH, FRAGMENT_SHADER_FIL_PATH);
+
 	Mesh cutSurface;
 	Shader cutShader(VERTEX_SHADER_CUT_PATH, FRAGMENT_SHADER_CUT_PATH);
 	Foam foam(tCubeX, tCubeY, tCubeZ, glm::radians(config.sFoam.angleY), config.sFoam.posX, config.sFoam.posZ);
 	Shader foamShader(VERTEX_SHADER_CUBE_PATH, FRAGMENT_SHADER_CUBE_PATH);
 	Shader baseShader(VERTEX_SHADER_BASE_PATH, FRAGMENT_SHADER_BASE_PATH);
 
+	//3D axis guide
+	GLfloat guide_vertex_data[] = {
+		1, 0, 0, //X axis
+		0, 0, 0, //origin
+		0, 1, 0, //Y axis
+		0, 0, 0, //origin
+		0, 0, 1, //Z axis
+		0, 0, 0  //origin
+	};
+
+	GLuint guide_indices_data[] = {
+		0,1,
+		2,3,
+		4,5
+	};
+
+	GLfloat guide_color_data[] = {
+		1, 0, 0,
+		1, 0, 0,
+		0, 0, 1,
+		0, 0, 1,
+		0, 1, 0,
+		0, 1, 0,
+	};
+
+	Mesh guide(guide_vertex_data, guide_indices_data, 18, 6, guide_color_data, 18);
+	Shader guideShader(VERTEX_SHADER_GUIDE_PATH, FRAGMENT_SHADER_GUIDE_PATH);
+
+
+
 	//add cutter and foam objects to the simulation
 	simu.BindObjects(foam, fil, cutSurface);
 
 	/* MATRIX */
 	
-	// Projection matrix : Field of View, ratio, display range : 0.1 unit <-> 100 units
+	// Projection matrix : Field of View, ratio, display range
 
 	glm::mat4 Projection = glm::perspective(glm::radians(fov / zoomFactor), m_ratio , ZNEAR, ZFAR);
 	//glm::mat4 ProjectionDefault = Projection;
 	glm::mat4 View  = glm::lookAt(
-		glm::vec3(camPos), // Camera is at (4,3,3), in World Space
-		glm::vec3(camTarget), // and looks at the cube
+		glm::vec3(camPos), 
+		glm::vec3(camTarget),
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
+
+	glm::mat4 guideView = glm::lookAt(
+		glm::vec3(camPos),
+		glm::vec3(camTarget),
+		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+	);
+
+	glm::mat4 guideProjection = glm::perspective(glm::radians(15.0f), m_ratio, ZNEAR, ZFAR);
 
 
 	glm::mat4 Mat1 = glm::mat4(1.0f);
 	glm::mat4 ModelCube = Mat1; 
 	glm::mat4 ModelBase = Mat1;
 	glm::mat4 ModelFil = Mat1;
-
+	glm::mat4 ModelGuide = Mat1;
 
 	// Our ModelViewProjection : multiplication of our 3 matrices
+	glm::mat4 mvp1 = Projection * View * Mat1;
+
 	glm::mat4 mvpCube = Projection * View * ModelCube; // Remember, matrix multiplication is the other way around
 	glm::mat4 mvpFil = Projection * View * ModelFil;
-	glm::mat4 mvpBase =Projection * View * ModelBase;
-	glm::mat4 mvp1 = Projection * View * Mat1;
+	glm::mat4 mvpBase = Projection * View * ModelBase;
+	glm::mat4 mvpGuide = guideProjection * guideView * Mat1;
 
 	/* ROTATION CUBE*/
 	
@@ -226,14 +270,16 @@ void SceneOpenGL::mainLoop()
 		//save model matrix
 		glm::mat4 saveModelCube = ModelCube;
 		glm::mat4 saveModelBase = ModelBase;
-
+		glm::mat4 saveModelGuide = ModelGuide;
 
 		//apply transformations
 		ModelCube = glm::translate(ModelCube, glm::vec3(foam.getPosX(), 1.0f, foam.getPosZ()));
 		ModelCube = glm::rotate(ModelCube, foam.getRotationRad(), glm::vec3(0,1,0));
 		ModelCube = glm::scale(ModelCube, glm::vec3(foam.getLength(), foam.getHeight(), foam.getWidth()));
 		ModelBase = glm::scale(ModelBase, glm::vec3(config.Plate.length, 0.0f, config.Plate.width));
-
+		//ModelGuide = glm::translate(ModelGuide, glm::vec3(0, 0, 0));
+		//ModelGuide = glm::translate(ModelGuide, glm::vec3(-camPos.x, -camPos.y, -camPos.z));
+		ModelGuide = glm::scale(ModelGuide, glm::vec3(100,100, 100));
 		
 		//test plane transformations
 		for (int i = 0; i < 5; ++i)
@@ -256,16 +302,24 @@ void SceneOpenGL::mainLoop()
 		//update mvp matrix
 
 		Projection = glm::perspective(glm::radians(fov / zoomFactor), m_ratio, ZNEAR, ZFAR);
+		glm::mat4 guideProjection = glm::perspective(glm::radians(15.0f), m_ratio, ZNEAR, ZFAR);
 
 		View = glm::lookAt(
 			glm::vec3(camPos), 
 			glm::vec3(camTarget), 
 			glm::vec3(0,1,0));
 
+		glm::mat4 guideView = glm::lookAt(
+			glm::vec3(camPos), // Camera is at (4,3,3), in World Space
+			glm::vec3(0,0,0), // and looks at the cube
+			glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+		);
+
 		mvpCube = Projection * View * ModelCube;
 		mvpBase = Projection * View * ModelBase;
 		mvpFil = Projection * View * ModelFil;
 		mvp1 = Projection * View * Mat1;
+		mvpGuide = guideProjection * guideView * ModelGuide;
 
 		//draw 3D objects
 		
@@ -296,8 +350,18 @@ void SceneOpenGL::mainLoop()
 		
 		base.mesh.Draw(baseShader, mvpBase, 1);
 		foam.mesh.Draw(foamShader, mvpCube, 0);
-		fil.afficher(mvpFil);
+		fil.Draw(filShader, mvpFil);
+		
+		//guide docked on the corner of the screen
+		glViewport(0, m_windowHeight/10, 200*m_ratio, 200);
+		glDisable(GL_DEPTH_TEST);
+		glLineWidth(3.0f);
 
+		guide.Draw(guideShader, mvpGuide, 2);
+
+		glViewport(0, 0, m_windowWidth, m_windowHeight);
+		glEnable(GL_DEPTH_TEST);
+		glLineWidth(1.0f);
 		//imgui
 		
 		ImGui::Begin("Simulation");
@@ -305,7 +369,7 @@ void SceneOpenGL::mainLoop()
 			if (simu.hasGcode())
 				ImGui::TextUnformatted(content.recentFileName.c_str());
 			else
-				ImGui::TextUnformatted("Aucun gcode");
+				ImGui::TextUnformatted("No gcode");
 			ImGui::Separator();
 
 			if (etatSimu == 1)
@@ -323,6 +387,7 @@ void SceneOpenGL::mainLoop()
 			{
 				if (ImGui::Button("Start"))
 				{
+
 					simu.Demarrer();
 					etatSimu = 1;
 				}
@@ -339,29 +404,29 @@ void SceneOpenGL::mainLoop()
 			
 			
 			if (vitesse > 10)
-				ImGui::SliderFloat("Vitesse", &vitesse, 0.1f, 10.1f, "Max", 2.0f);
+				ImGui::SliderFloat("Speed", &vitesse, 0.1f, 10.1f, "Max", 2.0f);
 			else
-				ImGui::SliderFloat("Vitesse", &vitesse, 0.1f, 10.1f, "%.1f", 2.0f);
+				ImGui::SliderFloat("Speed", &vitesse, 0.1f, 10.1f, "%.1f", 2.0f);
 
 			if (etatSimu == 2)
 			{
-				ImGui::TextUnformatted("En attente...");
+				ImGui::TextUnformatted("Waiting...");
 			}
 			else if (etatSimu == 0)
 			{
-				ImGui::TextUnformatted("Simulation terminee");
+				ImGui::TextUnformatted("Simulation over");
 			}
 			else if (etatSimu == 1)
 			{
-				ImGui::TextUnformatted("Simulation en cours...");
+				ImGui::TextUnformatted("Simulation in progress...");
 			}
 			else if(etatSimu == -1)
 			{
-				ImGui::TextUnformatted("Simulation reinitialisee");
+				ImGui::TextUnformatted("Simulation reset");
 			}
 			else
 			{
-				ImGui::TextUnformatted("Simulation en pause");
+				ImGui::TextUnformatted("Simulation paused");
 			}
 
 			
@@ -387,34 +452,39 @@ void SceneOpenGL::mainLoop()
 
 		}ImGui::End();
 		
-		ImGui::Begin("Camera pos");
+		ImGui::Begin("Camera");
 		{
 
-			if (ImGui::Button("Vue par defaut "))
+			if (ImGui::Button("Default"))
 			{
 				camPos = glm::vec3(camPosDefault);
 				zoomFactor = zoomDefault;
 				camTarget = cubeCentrePos;
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Vue dessus "))
+			if (ImGui::Button("Top"))
 			{
 				camTarget = cubeCentrePos;
 				camPos = glm::vec3(0, 1000.0f, 0.01f);
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Vue face "))
+			if (ImGui::Button("Face"))
 			{
 				camTarget = cubeCentrePos;
 				camPos = glm::vec3(0.0f, tCubeY / 2, 1000.0f);
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Vue cote "))
+			if (ImGui::Button("Side "))
 			{
 				camTarget = cubeCentrePos;
 				camPos = glm::vec3(-1000.0f, tCubeY / 2, 0.1f);
+			}ImGui::SameLine();
+			if (ImGui::Button("Isometric"))
+			{
+				camTarget = cubeCentrePos;
+				camPos = glm::vec3(700.0f, 700.0f, 700.0f);
 			}
-			if (ImGui::Button("Zoom par defaut"))
+			if (ImGui::Button("Default Zoom"))
 			{
 				zoomFactor = zoomDefault;
 			}
@@ -422,9 +492,9 @@ void SceneOpenGL::mainLoop()
 			ImGui::Text("x%.1f", zoomFactor);
 
 
-			ImGui::SliderFloat("CamPos X", &camPos.x, -1000.0f, 1000.0f, "%.3f", 1.0f);
-			ImGui::SliderFloat("CamPos Y", &camPos.y, 0.0f, 1000.0f, "%.3f", 1.0f);
-			ImGui::SliderFloat("CamPos Z", &camPos.z, -1000.0f, 1000.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("Cam pos X", &camPos.x, -1000.0f, 1000.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("Cam pos Y", &camPos.y, 0.0f, 1000.0f, "%.3f", 1.0f);
+			ImGui::SliderFloat("Cam pos Z", &camPos.z, -1000.0f, 1000.0f, "%.3f", 1.0f);
 
 			ImGui::SliderFloat("Cam target X", &camTarget.x, -1000.0f, 1000.0f, "%.3f", 1.0f);
 			ImGui::SliderFloat("Cam target Y", &camTarget.y, 0.0f, 1000.0f, "%.3f", 1.0f);
@@ -447,9 +517,11 @@ void SceneOpenGL::mainLoop()
 
 		ModelCube = saveModelCube;
 		ModelBase = saveModelBase;
+		ModelGuide = saveModelGuide;
 
 		mvpCube = Projection * View * ModelCube;
 		mvpBase = Projection * View * ModelBase;
+		mvpGuide = guideProjection * guideView * ModelGuide;
 
 		//reset planes 
 

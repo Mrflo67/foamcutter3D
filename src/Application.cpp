@@ -4,30 +4,12 @@
 *	PROJECT BTS SN 2019 - FOAM CUTTER
 */
 
-#include <iostream>
-#include <string>
-
-#include "SelecteurFichier.h"
-#include "Gcode.h"
-#include "GcodeLoader.h"
 #include "SceneOpenGL.h"
-#include "Simulation.h"
-
-
-#ifndef _WIN32 /* Set the parameter for windows 32 bit */
-#define APIENTRY __stdcall
-#endif // !__WIN32
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 
 int main()
 {
 	
 	SceneOpenGL scene("FoamCutter Simulation");
-
-	scene.initSimu();
 
 	if (!scene.initWindow())
 		return 0;

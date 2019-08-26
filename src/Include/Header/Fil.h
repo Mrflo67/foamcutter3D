@@ -16,20 +16,19 @@
 class Fil
 {
 public:
-	Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil, 
-		std::string const vertexShader, std::string const fragmentShader);
+	Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil);
 	~Fil();
-	void afficher(glm::mat4 & mvp);
+	void Draw(Shader const& shader, const glm::mat4 & mvpMatrix);
 	void majPos(float, float, float, float);
 	void setOriginPos(float, float, float, float);
 	void getCurrentPos(float pos[]);
 	void getOriginPos(float pos[]);
-	void getInterFoamPos(float pos[4], float L);
 	float getEcartX();
 
 	const float posZ_XY;
 	const float posZ_UV;
 
+	Mesh wire;
 	Mesh trajectory;
 private:
 
@@ -39,16 +38,6 @@ private:
 	//indices significations: 
 	//0=X, 1=Y, 2=U, 3=V
 	float m_currentPos[4];
-
-	GLfloat m_vertex[2*3];
-	GLuint m_indices[2];
-
-	GLuint VAO;
-	GLuint VBO;
-	GLuint EBO;
-
-	Shader m_shader;
-	
 
 };
 

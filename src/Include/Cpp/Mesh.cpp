@@ -16,34 +16,24 @@
 #include <vector>
 #include <array>
 
+#define EMPTY_SIZE_INIT 20000
 
 Mesh::Mesh()
 {
+	m_vertices.clear();
+	m_indices.clear();
+	m_normals.clear();
 
-	std::array<float, 3> v0{ {0.0f, 0.0f, 0.0f} };
-	m_vertices.push_back(v0);
-	m_vertices.push_back(v0);
-	m_vertices.push_back(v0);
-	m_vertices.push_back(v0);
-	m_vertices.push_back(v0);
-	m_vertices.push_back(v0);
-	m_indices.push_back(0);
-	m_indices.push_back(0);
-	m_indices.push_back(0);
-	m_indices.push_back(0);
-	m_indices.push_back(0);
-	m_indices.push_back(0);
-	VBOsizeInit = m_vertices.size() * sizeof(float) * 3 * 10000;
-	EBOsizeInit = m_vertices.size() * sizeof(unsigned int) * 10000;
-
-	setupEmptyMesh();
+	setupMesh();
 }
 
 Mesh::Mesh(std::vector<std::array<float, 3>> vertices,
-	std::vector<unsigned int> indices)
+	std::vector<unsigned int> indices, std::vector<std::array<float, 3>> colors)
 {
 	m_vertices = vertices;
 	m_indices = indices;
+	m_colors = colors;
+	m_normals.clear();
 
 	VBOsizeInit = sizeof(float) * 3 * m_vertices.size();
 	EBOsizeInit = sizeof(unsigned int) * m_indices.size();
@@ -53,13 +43,15 @@ Mesh::Mesh(std::vector<std::array<float, 3>> vertices,
 }
 
 Mesh::Mesh(GLfloat vertices[], GLuint indices[],
-	size_t sV, size_t sI)
+	size_t sV, size_t sI, GLfloat colors[], size_t sC)
 {
 	std::array<float, 3> av;
 	m_vertices.clear();
 	m_indices.clear();
+	m_normals.clear();
+	m_colors.clear();
 
-	for (unsigned int i = 0; i < sV; i+=3)
+	for (unsigned int i = 0; i < sV; i += 3)
 	{
 		av[0] = vertices[i];
 		av[1] = vertices[i + 1];
@@ -67,8 +59,19 @@ Mesh::Mesh(GLfloat vertices[], GLuint indices[],
 
 		m_vertices.push_back(av);
 	}
+	if (sC > 0)
+	{
+		for (unsigned int i = 0; i < sC; i += 3)
+		{
+			av[0] = colors[i];
+			av[1] = colors[i + 1];
+			av[2] = colors[i + 2];
 
-	for (unsigned int i = 0; i < sI; ++i)
+			m_colors.push_back(av);
+		}
+	}
+	
+		for (unsigned int i = 0; i < sI; ++i)
 	{
 		
 		m_indices.push_back((unsigned int)indices[i]);
@@ -85,7 +88,8 @@ Mesh::~Mesh()
 {
 }
 
-void Mesh::Draw(Shader const & shader, const glm::mat4 & mvpMatrix, int triangle)
+//triangle : 0=lines, 1=triangles, other=line_strip 
+void Mesh::Draw(Shader const & shader, const glm::mat4 & mvpMatrix, int primitive)
 {
 	static size_t vSize = m_vertices.size();
 	static size_t iSize = m_indices.size();
@@ -120,16 +124,16 @@ void Mesh::Draw(Shader const & shader, const glm::mat4 & mvpMatrix, int triangle
 	glBindVertexArray(VAO);
 
 
-	if (triangle == 1)
+	if (primitive == 1)
 		glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
-	else if (triangle == 0)
+	else if (primitive == 0)
 		glDrawElements(GL_LINES, m_indices.size(), GL_UNSIGNED_INT, 0);
 	else
 		glDrawElements(GL_LINE_STRIP, m_indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
 
-void Mesh::Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection, int triangle,
+void Mesh::Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::mat4 &projection, int primitive,
 	std::array<ClipPlane, 5> & planes)
 {
 	static size_t vSize = m_vertices.size();
@@ -184,9 +188,9 @@ void Mesh::Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::ma
 	glBindVertexArray(VAO);
 	
 	
-	if(triangle ==1)
+	if(primitive ==1)
 		glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
-	else if(triangle == 0)
+	else if(primitive == 0)
 		glDrawElements(GL_LINES, m_indices.size(), GL_UNSIGNED_INT, 0);
 	else
 		glDrawElements(GL_LINE_STRIP, m_indices.size(), GL_UNSIGNED_INT, 0);
@@ -196,6 +200,7 @@ void Mesh::Draw(Shader const& shader, glm::mat4 &model, glm::mat4 &view, glm::ma
 
 void Mesh::setupMesh()
 {
+	//generate buffers and fill them
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -203,47 +208,75 @@ void Mesh::setupMesh()
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(float) * 3, &m_vertices[0], GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	if (m_vertices.size() > 0)
+	{
+		glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(float) * 3, &m_vertices[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int),
+			&m_indices[0], GL_STATIC_DRAW);
+	}
+	else
+	{
+		std::array<float, 3> v0{ {0.0f, 0.0f, 0.0f} };
+		m_vertices.push_back(v0);
+		m_vertices.push_back(v0);
+		m_vertices.push_back(v0);
+		m_vertices.push_back(v0);
+		m_vertices.push_back(v0);
+		m_vertices.push_back(v0);
+		m_indices.push_back(0);
+		m_indices.push_back(0);
+		m_indices.push_back(0);
+		m_indices.push_back(0);
+		m_indices.push_back(0);
+		m_indices.push_back(0);
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int),
-		&m_indices[0], GL_STATIC_DRAW);
+		VBOsizeInit = m_vertices.size() * sizeof(float) * 3 * EMPTY_SIZE_INIT;
+		EBOsizeInit = m_vertices.size() * sizeof(unsigned int) * EMPTY_SIZE_INIT;
 
+		glBufferData(GL_ARRAY_BUFFER, VBOsizeInit, NULL, GL_STREAM_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, EBOsizeInit,
+			NULL, GL_STREAM_DRAW);
+	}
 	// set the vertex attribute pointers
 		// vertex Positions
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+
+	//generate color buffer if needed
+	if (m_colors.size() > 0)
+	{
+		glGenBuffers(1, &colorbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+		glBufferData(GL_ARRAY_BUFFER, m_colors.size() * sizeof(float) * 3, &m_colors[0], GL_STATIC_DRAW);
+
+		//color positions
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	}
 }
 
-void Mesh::setupEmptyMesh()
+void Mesh::updateVBO(std::vector<std::array<float, 3>> newVertices)
 {
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
+	if (newVertices.size() == 0)
+	{
+		newVertices = m_vertices;
+	}
+	else
+	{
+		m_vertices = newVertices;
+	}
+		
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glBufferData(GL_ARRAY_BUFFER, VBOsizeInit, NULL, GL_STREAM_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, EBOsizeInit,
-		NULL, GL_STREAM_DRAW);
-
-
-	
-
-	// set the vertex attribute pointers
-		// vertex Positions
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-	
-	
+	glBufferSubData(GL_ARRAY_BUFFER,
+		0,
+		m_vertices.size() * sizeof(float) * 3,
+		&m_vertices[0]);
 }
+
 
 void Mesh::genVertexNormals()
 {
@@ -293,17 +326,15 @@ void Mesh::genVertexNormals()
 
 	
 	
-
-	
 	glGenBuffers(1, &normalbuffer);
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
 	glBufferData(GL_ARRAY_BUFFER, m_normals.size() * sizeof(float) * 3, &m_normals[0], GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(
-		1,                                // attribute
+		2,                                // attribute
 		3,                                // size
 		GL_FLOAT,                         // type
 		GL_FALSE,                         // normalized?
@@ -312,9 +343,4 @@ void Mesh::genVertexNormals()
 	);
 
 	std::cout << "Normals generated successfully !" << std::endl;
-}
-
-void Mesh::updateBuffers()
-{
-
 }

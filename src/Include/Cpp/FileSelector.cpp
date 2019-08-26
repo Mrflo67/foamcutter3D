@@ -27,10 +27,10 @@ bool FileSelector::verifierContenu(char const* nom, std::string & validCmdList)
 	
 	if (fichier.is_open())
 	{
-		std::cout << "Debut de l'analyse des commandes contenues dans le fichier" << std::endl;
+		//std::cout << "Debut de l'analyse des commandes contenues dans le fichier" << std::endl;
 		while (fichier >> commandeLue)
 		{
-			std::cout << commandeLue << std::endl;
+			//std::cout << commandeLue << std::endl;
 
 			//find() returns npos if the string has not been found
 			if (validCmdList.find(commandeLue[0]) == std::string::npos)
@@ -44,14 +44,15 @@ bool FileSelector::verifierContenu(char const* nom, std::string & validCmdList)
 	} 
 	else
 	{
-		std::cout << "Ouverture du fichier impossible" << std::endl;
-		msgErreur("Ouverture impossible!\nVeuillez reessayer");
+		std::cout << "File opening failed !" << std::endl;
+		msgErreur("Can't open the file\nPlease try again");
 		return false;
 	}
 	
-	msgSucces("Chargement réussi !");
+	//msgSucces("file loaded successfully !");
+	tinyfd_notifyPopup("Success", "Gcode file loaded !", "info");
 
-	std::cout << "Contenu valide, chargement du fichier..." << std::endl;
+	std::cout << "File loaded successfully" << std::endl;
 	return true;
 }
 
@@ -82,7 +83,7 @@ bool FileSelector::verifierExtension(char const* nom, std::string extensionList)
 
 bool FileSelector::verifierLongueur(char const* nom, long int maxLength)
 {
-	std::cout << "ouverture de " << nom << " en cours..." << std::endl; //debug
+	std::cout << "Opening of " << nom << " ..." << std::endl; //debug
 	std::ifstream gcodeFile(nom, std::ios::binary | std::ios::ate);//ouvre fichier avec curseur à la fi
 	
 	if (gcodeFile.is_open())
@@ -97,7 +98,7 @@ bool FileSelector::verifierLongueur(char const* nom, long int maxLength)
 	}
 	else
 	{
-		msgErreur("Ouverture impossible!\nVeuillez reessayer");
+		msgErreur("Cannot open the file !\nPlease try again !");
 		return false;
 	}gcodeFile.close();
 
@@ -141,7 +142,7 @@ std::string FileSelector::select(long int maxLength, std::string extensionList,
 		char const* fichierChoisi=NULL;
 
 		fichierChoisi = tinyfd_openFileDialog(
-			"Choix du gcode", // NULL or ""
+			"Select gcode", // NULL or ""
 			"./gcodes", // NULL or ""
 			3, // 0
 			filters, // NULL {"*.jpg","*.png"}
@@ -155,19 +156,19 @@ std::string FileSelector::select(long int maxLength, std::string extensionList,
 		
 		if(!verifierExtension(fichierChoisi, extensionList))
 		{
-			msgErreur("Mauvaise extension !");
+			msgErreur("Wrong file extension !\nPlease select a valid Gcode file");
 		}
 		else
 		{
 			if (!verifierLongueur(fichierChoisi, maxLength))
 			{
-				msgErreur("Le fichier est vide ou trop grand!\n Veuillez reessayer !");
+				msgErreur("The selected file is empty or too large !\nPlease try again !");
 			}
 			else
 			{
 				if (!verifierContenu(fichierChoisi, validCmdList))
 				{
-					msgErreur("Des commandes inconnues ont été détectées dans le fichier");
+					msgErreur("Unsupported or unknown commands detected");
 				}
 				else
 				{
@@ -196,7 +197,7 @@ bool FileSelector::msgSucces(char const* const message)
 bool FileSelector::msgErreur(char const* const message)
 {
 	tinyfd_messageBox(
-		"Erreur", // NULL or ""
+		"Error", // NULL or ""
 		message, // NULL or "" may contain \n \t
 		"okcancel", // "ok" "okcancel" "yesno" "yesnocancel"
 		"warning", // "info" "warning" "error" "question"

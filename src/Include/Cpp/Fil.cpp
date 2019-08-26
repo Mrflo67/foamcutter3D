@@ -10,30 +10,24 @@
 #include <array>
 
 
-Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil,
-	std::string const vertexShader, std::string const fragmentShader) :
+Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil) :
 	m_hauteurOrigine(hauteurFilOrigine), m_ecartMoteurs(ecartMoteursFil), m_ecartCubeFil(ecartCubeFil),
-	m_shader(vertexShader, fragmentShader), posZ_XY(ecartMoteursFil/2), posZ_UV(-ecartMoteursFil/2),
+	posZ_XY(ecartMoteursFil/2), posZ_UV(-ecartMoteursFil/2),
 	trajectory()
 {
 		// An array of 3 vectors which represents 3 vertices
 	GLfloat vertex_data[] = {
 		-ecartCubeFil, 0.0f + m_hauteurOrigine, m_ecartMoteurs / 2,
-		-ecartCubeFil, 0.0f + m_hauteurOrigine, -m_ecartMoteurs / 2,
+		-ecartCubeFil, 0.0f + m_hauteurOrigine, -m_ecartMoteurs / 2
 
 	};
 
 	GLuint indices_data[] = {
-		0,1,
+		0,1
 	};
 	
-	for (int i = 0; i < 2 * 3; i++)
-	{
-		m_vertex[i] = vertex_data[i];
-	}
-
-	for (int i = 0; i < 2; i++)
-		m_indices[i] = indices_data[i];
+	Mesh tmpMesh(vertex_data, indices_data, 6, 2);
+	wire = tmpMesh;
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -53,33 +47,7 @@ Fil::Fil(float ecartCubeFil, float hauteurFilOrigine, float ecartMoteursFil,
 	trajectory.m_indices.push_back(1);
 	trajectory.m_indices.push_back(0);
 	trajectory.m_indices.push_back(0);
-
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertex), m_vertex, GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_indices),
-		&m_indices[0], GL_STATIC_DRAW);
-
-	// 1st attribute buffer : vertices
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(
-		0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-		3,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,                  // stride
-		(void*)0            // array buffer offset
-	);
-
+		
 }
 
 
@@ -91,17 +59,23 @@ Fil::~Fil()
 
 void Fil::majPos(float newPos_X, float newPos_Y, float newPos_U, float newPos_V)
 {
-	unsigned int offset = trajectory.m_vertices.size();
-	
-	GLfloat newVertexData[] = {
-		-m_ecartCubeFil + newPos_X, newPos_Y + m_hauteurOrigine, m_ecartMoteurs / 2,
-		-m_ecartCubeFil + newPos_U, newPos_V + m_hauteurOrigine, -m_ecartMoteurs / 2,
-	};
+	//move the wire mesh by updating vertex coordinates into the VBO
 
-	std::array<float, 3> v0 = { newVertexData[3], newVertexData[4], newVertexData[5] };
+	std::vector<std::array<float, 3>> newVertexData;
+	newVertexData.push_back(std::array<float, 3> {-m_ecartCubeFil + newPos_X, newPos_Y + m_hauteurOrigine, m_ecartMoteurs / 2});
+	newVertexData.push_back(std::array<float, 3> {-m_ecartCubeFil + newPos_U, newPos_V + m_hauteurOrigine, -m_ecartMoteurs / 2});
+		
+	wire.updateVBO(newVertexData);
+
+
+	//udpate trajectory mesh by adding new vertices
+
+	unsigned int offset = trajectory.m_vertices.size();
+
+	std::array<float, 3> v0 = { newVertexData[1][0], newVertexData[1][1], newVertexData[1][2] };
 	trajectory.m_vertices.push_back(v0);
 	
-	v0[0] = newVertexData[0]; v0[1] = newVertexData[1]; v0[2] = newVertexData[2];
+	v0[0] = newVertexData[0][0]; v0[1] = newVertexData[0][1]; v0[2] = newVertexData[0][2];
 
 	trajectory.m_vertices.push_back(v0);
 	
@@ -114,18 +88,13 @@ void Fil::majPos(float newPos_X, float newPos_Y, float newPos_U, float newPos_V)
 		trajectory.m_indices.push_back(offset - 2);
 	}
 	
+	//update current axis positions values
 
 	m_currentPos[0] = newPos_X;
 	m_currentPos[1] = newPos_Y;
 	m_currentPos[2] = newPos_U;
 	m_currentPos[3] = newPos_V;
 
-	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferSubData(GL_ARRAY_BUFFER,
-		0,
-		sizeof(m_vertex),
-		newVertexData);
 }
 
 //returns array which contains X,Y,U,V current positions in this order
@@ -144,11 +113,6 @@ void Fil::getOriginPos(float pos[])
 	pos[3] = pos[0];
 }
 
-void Fil::getInterFoamPos(float pos[4], float LFoam)
-{
-	getCurrentPos(pos);
-}
-
 float Fil::getEcartX()
 {
 	return m_ecartCubeFil;
@@ -157,18 +121,8 @@ float Fil::getEcartX()
 void Fil::setOriginPos(float X, float Y, float U, float V)
 {}
 
-void Fil::afficher(glm::mat4 & mvpMatrix)
+void Fil::Draw(Shader const& shader, const glm::mat4 & mvpMatrix)
 {
-
-	glUseProgram(m_shader.getProgramID());
-
-	GLuint MatrixID = glGetUniformLocation(m_shader.getProgramID(), "MVP");
-	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvpMatrix[0][0]);
-
-	glBindVertexArray(VAO);
-	glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-
-	trajectory.Draw(m_shader, mvpMatrix, 0);
-	
+	wire.Draw(shader, mvpMatrix, 0);
+	trajectory.Draw(shader, mvpMatrix, 0);
 }
