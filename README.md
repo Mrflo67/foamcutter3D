@@ -8,7 +8,7 @@ Open source libraries only
 Les bibliothèques / APIs utilisées pour ce projet sont les suivantes :  
 Use of the following libraries for this project :  
 
-- OpenGL, GLEW, GLFW, GLM
+- OpenGL 3.3 , GLEW, GLFW, GLM
 - ImGUI : https://github.com/ocornut/imgui
 - tinyfiledialogs :https://sourceforge.net/projects/tinyfiledialogs/files/  
 - json : https://github.com/nlohmann/json
