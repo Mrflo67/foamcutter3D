@@ -1,0 +1,112 @@
+// DEBUG 32 BITS
+
+<Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>GLEW_STATIC;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>
+      </LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <PreprocessToFile>false</PreprocessToFile>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <AdditionalIncludeDirectories>$(SolutionDir)FoamCutter\Include\GLEW;$(SolutionDir)FoamCutter\Include\IMGUI;$(SolutionDir)FoamCutter\Include\GLFW\include\Win32;$(SolutionDir)FoamCutter\Include\tfd;$(SolutionDir)FoamCutter\Include\GLM;$(SolutionDir)FoamCutter\Include\json;$(SolutionDir)FoamCutter\src\Include\Header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)FoamCutter\Libraries\GLFW\x86\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Ole32.lib;Comdlg32.lib;glfw3d.lib;User32.lib;Gdi32.lib;Shell32.lib;opengl32.lib;/NODEFAULTLIB:msvcrt.lib;/NODEFAULTLIB:libcmt.lib;</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+
+
+
+//DEBUG 64 BITS
+
+<Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FoamCutter\Include\tfd;$(SolutionDir)FoamCutter\Include\json;$(SolutionDir)FoamCutter\Include\IMGUI;$(SolutionDir)FoamCutter\src\Include\Header;$(SolutionDir)FoamCutter\Include\GLEW\;$(SolutionDir)FoamCutter\Include\GLFW\include\x64;$(SolutionDir)FoamCutter\Include\GLM</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GLEW_STATIC;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <PreprocessToFile>false</PreprocessToFile>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <LanguageStandard>
+      </LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)FoamCutter\Libraries\GLFW\x64\Debug\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3d.lib;User32.lib;Gdi32.lib;Shell32.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;/NODEFAULTLIB:msvcrt.lib;/NODEFAULTLIB:libcmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+
+
+//RELEASE 32 BITS
+
+<Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FoamCutter\src\Include\Header;$(SolutionDir)FoamCutter\Include\tfd;$(SolutionDir)FoamCutter\Include\json;$(SolutionDir)FoamCutter\Include\IMGUI;$(SolutionDir)FoamCutter\Dependencies;$(SolutionDir)FoamCutter\Include\GLFW\include\Win32;$(SolutionDir)FoamCutter\Include\GLEW;$(SolutionDir)FoamCutter\Include\GLM</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GLEW_STATIC;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>
+      </LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <PreprocessToFile>false</PreprocessToFile>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)FoamCutter\Libraries\GLFW\x86\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Ole32.lib;Comdlg32.lib;glfw3.lib;User32.lib;Gdi32.lib;Shell32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+
+
+
+
+//RELEASE 64 BITS
+
+ <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)FoamCutter\Include\GLEW;$(SolutionDir)FoamCutter\Include\GLFW\include\x64;$(SolutionDir)FoamCutter\Include\GLM;$(SolutionDir)FoamCutter\Include\IMGUI;$(SolutionDir)FoamCutter\Include\json;$(SolutionDir)FoamCutter\Include\tfd;$(SolutionDir)FoamCutter\src\Include\Header</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GLEW_STATIC;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <PreprocessToFile>false</PreprocessToFile>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)FoamCutter\Libraries\GLFW\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;User32.lib;Gdi32.lib;Shell32.lib;opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;vcruntime.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
