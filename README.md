@@ -2,11 +2,11 @@
 Projet BTS 2018-2019 Programme de Simulation 3D découpeuse à fil chaud  
 Foamcutter 3D Simulation software
 
-Multiplatform (MacOS not yet ready)  
+Windows+Linux (MacOS not yet supported)  
 Open source libraries only
 
 Les bibliothèques / APIs utilisées pour ce projet sont les suivantes :  
-Use of the following libraries for this project :  
+The following libraries were used for this project :  
 
 - OpenGL 3.3 , GLEW, GLFW, GLM
 - ImGUI : https://github.com/ocornut/imgui
